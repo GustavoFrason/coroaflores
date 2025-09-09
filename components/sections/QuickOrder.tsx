@@ -1,10 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import FrasesFaixa from "@/components/common/FrasesFaixa";
 import { MODELOS } from "@/lib/models";
-import { makeWaLink } from "@/lib/utils";
 import { WHATS_NUMBER } from "@/lib/constants";
 import { withUtm } from "@/lib/utm";
 
@@ -14,7 +12,13 @@ const TAMANHOS: Record<"P" | "M" | "G", string> = {
   G: "80–90cm",
 };
 
-type TipoLocal = "Capela" | "Cemitério" | "Hospital" | "Igreja" | "Residência" | "Outro";
+type TipoLocal =
+  | "Capela"
+  | "Cemitério"
+  | "Hospital"
+  | "Igreja"
+  | "Residência"
+  | "Outro";
 
 /** Pequeno helper para um colapso suave sem libs */
 function Collapsible({
@@ -56,7 +60,7 @@ export default function QuickOrder() {
 
   const coresDoModelo = MODELOS.find((m) => m.nome === modelo)?.cores ?? [];
 
-  // Monta um resumo de local compatível com seu makeWaLink
+  // Monta um resumo de local
   const localResumo = useMemo(() => {
     if (!informarLocalAgora) return "Confirmarei por WhatsApp";
     const partes = [
@@ -84,14 +88,19 @@ export default function QuickOrder() {
   ]);
 
   const waHref = useMemo(() => {
-    const texto = makeWaLink({
-      modelo,
-      tamanho,
-      cor,
-      faixa: faixa.trim(),
-      local: localResumo,
-      destinatario: destinatario.trim(),
-    });
+    // Monta a mensagem do Whats (inclui apenas o que fizer sentido)
+    const partes: string[] = [
+      `Olá!`,
+      `Modelo: ${modelo}`,
+      `Tamanho: ${tamanho} (${TAMANHOS[tamanho]})`,
+    ];
+    if (cor) partes.push(`Cor: ${cor}`);
+    if (faixa.trim()) partes.push(`Faixa: "${faixa.trim()}"`);
+    partes.push(`Local: ${localResumo}`);
+    if (destinatario.trim())
+      partes.push(`Homenageado(a): ${destinatario.trim()}`);
+
+    const texto = encodeURIComponent(partes.join(" | "));
 
     // UTM diferente se a pessoa decidiu não informar agora (útil p/ medir)
     const content = informarLocalAgora
@@ -220,13 +229,18 @@ export default function QuickOrder() {
                   onChange={(e) => setLocalTipo(e.target.value as TipoLocal)}
                   disabled={!informarLocalAgora}
                 >
-                  {["Capela", "Cemitério", "Hospital", "Igreja", "Residência", "Outro"].map(
-                    (t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    )
-                  )}
+                  {[
+                    "Capela",
+                    "Cemitério",
+                    "Hospital",
+                    "Igreja",
+                    "Residência",
+                    "Outro",
+                  ].map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -275,7 +289,9 @@ export default function QuickOrder() {
               </div>
 
               <div>
-                <label className="block text-sm mb-1">Ponto de referência (opcional)</label>
+                <label className="block text-sm mb-1">
+                  Ponto de referência (opcional)
+                </label>
                 <input
                   className="w-full rounded-md border border-[#E9E3DB] p-2"
                   placeholder="Ex.: Próximo à portaria principal"
@@ -297,7 +313,9 @@ export default function QuickOrder() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm mb-1">Link do Google Maps (opcional)</label>
+                <label className="block text-sm mb-1">
+                  Link do Google Maps (opcional)
+                </label>
                 <input
                   className="w-full rounded-md border border-[#E9E3DB] p-2"
                   placeholder="Cole aqui o link do Maps"
@@ -319,12 +337,13 @@ export default function QuickOrder() {
         {/* Faixa personalizada */}
         <div className="md:col-span-2">
           <label className="block text-sm mb-1">
-            Faixa personalizada <span className="text-[#7D7875]">(até 60 caracteres)</span>
+            Faixa personalizada{" "}
+            <span className="text-[#7D7875]">(até 60 caracteres)</span>
           </label>
           <input
             className="w-full rounded-md border border-[#E9E3DB] p-2"
             maxLength={60}
-            placeholder="Ex.: Com carinho, família Silva"
+            placeholder='Ex.: Com carinho, família Silva'
             value={faixa}
             onChange={(e) => setFaixa(e.target.value)}
             aria-describedby="faixa-help faixa-count"
@@ -332,7 +351,11 @@ export default function QuickOrder() {
           <p id="faixa-help" className="mt-1 text-xs text-[#7D7875]">
             Dica: toque em uma sugestão abaixo para copiar automaticamente.
           </p>
-          <p id="faixa-count" className="text-[11px] text-[#7D7875]" aria-live="polite">
+          <p
+            id="faixa-count"
+            className="text-[11px] text-[#7D7875]"
+            aria-live="polite"
+          >
             {faixa.length}/60
           </p>
           <FrasesFaixa onPick={setFaixa} className="mt-2 flex flex-wrap gap-2 text-sm" />
@@ -341,7 +364,8 @@ export default function QuickOrder() {
         {/* Destinatário */}
         <div className="md:col-span-2">
           <label className="block text-sm mb-1">
-            Nome do(a) homenageado(a) <span className="text-[#7D7875]">(opcional)</span>
+            Nome do(a) homenageado(a){" "}
+            <span className="text-[#7D7875]">(opcional)</span>
           </label>
           <input
             className="w-full rounded-md border border-[#E9E3DB] p-2"
