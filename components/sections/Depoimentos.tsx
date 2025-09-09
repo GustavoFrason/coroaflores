@@ -18,7 +18,7 @@ const ITEMS: Testimonial[] = [
     cidade: "Curitiba",
     texto:
       "As coroas de flores são elegantes, delicadas e chegam sempre no horário. O atendimento também é ótimo.",
-    avatar: "/avatar-1.jpg",
+    avatar: "/coroa_1.png",
   },
   {
     nome: "Marcos Andrade",

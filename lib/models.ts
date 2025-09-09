@@ -1,35 +1,34 @@
-export type ModeloCoroa = {
-  id: string;
-  nome: string;
-  precoBase: number;
-  img: string;
-  tamanhos: ("P" | "M" | "G")[];
-  cores: string[];
-};
-
-export const MODELOS: readonly ModeloCoroa[] = [
+// lib/models.ts
+export const MODELOS = [
   {
-    id: "classica",
+    id: "1",
     nome: "Coroa Clássica",
+    img: "/coroa_1.png",          // <- arquivo em /public/coroa_1.png
     precoBase: 249.9,
-    img: "/coroa_1.png",
-    tamanhos: ["P", "M", "G"],
     cores: ["Branco", "Verde"],
+    badge: "Mais vendido",
   },
   {
-    id: "premium",
+    id: "2",
     nome: "Coroa Premium",
+    img: "/coroa_2.png",          // /public/coroa_2.png
     precoBase: 369.9,
-    img: "/coroa_2.png",
-    tamanhos: ["P", "M", "G"],
     cores: ["Branco", "Amarelo"],
   },
   {
-    id: "elegante",
+    id: "3",
     nome: "Coroa Elegante",
+    img: "/coroa_3.png",          // /public/coroa_3.png
     precoBase: 299.9,
-    img: "/coroa_3.png",
-    tamanhos: ["P", "M", "G"],
     cores: ["Branco", "Rosa"],
+    badge: "Entrega hoje",
+  },
+    {
+    id: "4",
+    nome: "Coroa Elegante",
+    img: "/coroa_3.png",          // /public/coroa_3.png
+    precoBase: 299.9,
+    cores: ["Branco", "Rosa"],
+    badge: "Entrega hoje",
   },
 ];

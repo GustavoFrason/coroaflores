@@ -1,51 +1,35 @@
 // components/sections/About.tsx
+"use client";
+
 import Image from "next/image";
-import { BadgeCheck, Clock, Flower, Palette, Boxes } from "lucide-react";
-import IconBadge from "@/components/common/IconBadge";
-import type { LucideIcon } from "lucide-react";
+import { BadgeCheck, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { WHATS_NUMBER } from "@/lib/constants";
+import { withUtm } from "@/lib/utm";
 
 export default function About() {
+  const waHref = withUtm(
+    `https://wa.me/${WHATS_NUMBER}?text=${encodeURIComponent(
+      "Olá! Gostaria de fazer um pedido de coroa de flores. Pode me ajudar?"
+    )}`,
+    "about_cta"
+  );
+
   return (
     <section id="about" className="bg-[#FAF8F5] text-[#5E5A57]">
       <div className="mx-auto max-w-7xl px-4 py-16">
-        {/* Benefícios com ícones no topo */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center mb-12">
-          <Benefit
-            icon={Clock}
-            title="Entrega 24/7"
-            desc="Peça quando precisar. Atendimento imediato."
-          />
-          <Benefit
-            icon={Flower}
-            title="Flores Frescas"
-            desc="Seleção diária, composição elegante."
-          />
-          <Benefit
-            icon={Palette}
-            title="Feitas por Artistas"
-            desc="Arranjos com técnica e respeito."
-          />
-          <Benefit
-            icon={Boxes}
-            title="Ampla Linha de Serviços"
-            desc="Decoração floral e coroas para cerimônias."
-          />
-        </div>
-
-        {/* Conteúdo principal */}
         <div className="grid md:grid-cols-2 gap-10 items-center">
-          {/* Imagem com moldura “arco” */}
+          {/* Imagem com moldura */}
           <div className="relative mx-auto w-full max-w-[560px]">
-            {/* Moldura */}
             <div className="absolute inset-0 rounded-[28px] md:rounded-[36px] border-[6px] border-[#E9E3DB] pointer-events-none" />
             <div className="relative rounded-[24px] md:rounded-[32px] overflow-hidden shadow-sm">
               <Image
-                src="/coroa_2.png"
+                src="/coroa_1.png"
                 alt="Profissional preparando uma coroa de flores"
                 width={1120}
                 height={1400}
                 className="w-full h-auto object-cover"
-                priority
+                priority={false}
               />
             </div>
           </div>
@@ -59,9 +43,9 @@ export default function About() {
             </h2>
 
             <p className="mt-5 text-[#7D7875]">
-              Somos um estúdio floral especializado em <strong>coroas de flores</strong>. Unimos
-              sensibilidade e técnica para oferecer arranjos que confortam famílias e honram
-              memórias, com <strong>entrega no mesmo dia</strong> e faixa personalizada.
+              Somos um estúdio floral especializado em <strong>coroas de flores</strong>.
+              Unimos sensibilidade e técnica para oferecer arranjos que confortam famílias e honram
+              memórias, com <strong>entrega no mesmo dia</strong> e <strong>faixa personalizada</strong>.
             </p>
 
             <ul className="mt-6 space-y-2 text-sm">
@@ -79,38 +63,42 @@ export default function About() {
               </li>
             </ul>
 
+            {/* Mini-box de destaque + CTA */}
             <div className="mt-8 rounded-xl border bg-white p-5">
-              <div className="font-semibold text-[#5E5A57]">Coroas a partir de R$ 249,90</div>
+              <div className="font-semibold text-[#5E5A57]">
+                Coroas a partir de R$ 249,90
+              </div>
               <p className="text-sm text-[#7D7875] mt-1">
                 Fale pelo WhatsApp para confirmação rápida de <em>modelo</em>, <em>faixa</em> e{" "}
                 <em>entrega</em>.
               </p>
+
+              <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                <Button
+                  className="bg-[#2E4A3B] hover:bg-[#315F4F]"
+                  asChild
+                >
+                  <a
+                    href={waHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Falar com atendente no WhatsApp"
+                  >
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Falar no WhatsApp agora
+                  </a>
+                </Button>
+
+                <Button variant="outline" asChild>
+                  <a href="#catalogo" aria-label="Ver modelos de coroas">
+                    Ver modelos
+                  </a>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function Benefit({
-  icon: Icon,
-  title,
-  desc,
-}: {
-  icon: LucideIcon;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="space-y-2">
-      <IconBadge>
-        <Icon className="h-6 w-6" />
-      </IconBadge>
-      <div className="font-medium">{title}</div>
-      {/* Linha sutil abaixo do título */}
-      <div className="mx-auto h-px w-8 bg-[#CFC8BD]" />
-      <div className="text-xs text-[#7D7875] max-w-[28ch] mx-auto">{desc}</div>
-    </div>
   );
 }

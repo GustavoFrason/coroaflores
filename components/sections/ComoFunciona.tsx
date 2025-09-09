@@ -1,13 +1,26 @@
-import { Flower, MessageCircle, Clock } from "lucide-react";
-import Feature from "@/components/common/Feature";
+import { PenLine, BadgeCheck, Clock, Truck } from "lucide-react";
+
+const steps = [
+  { icon: PenLine, title: "Escolha e personalize", desc: "Selecione o modelo e escreva a faixa." },
+  { icon: BadgeCheck, title: "Confirmação rápida", desc: "Validamos tudo pelo WhatsApp." },
+  { icon: Clock, title: "Atendimento 24h", desc: "Pedidos confirmados até 15h: entrega hoje." },
+  { icon: Truck, title: "Entrega coordenada", desc: "Falamos com a capela e entregamos no local." },
+];
 
 export default function ComoFunciona() {
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-4">
-      <div className="rounded-2xl bg-white border p-6 grid md:grid-cols-3 gap-6">
-        <Feature title="Escolha o modelo" desc="Opções clássicas, elegantes e premium." icon={<Flower className="h-5 w-5" />} />
-        <Feature title="Fale no WhatsApp" desc="Mensagem pré-preenchida para agilizar." icon={<MessageCircle className="h-5 w-5" />} />
-        <Feature title="Entrega ágil" desc="Informe local e horário; nós cuidamos do restante." icon={<Clock className="h-5 w-5" />} />
+    <section className="bg-[#FAF8F5] border-y border-[#E9E3DB]">
+      <div className="mx-auto max-w-7xl px-4 py-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 text-[#5E5A57]">
+        {steps.map(({ icon: Icon, title, desc }) => (
+          <div key={title} className="text-center">
+            <span className="relative inline-grid h-12 w-12 place-items-center text-[#5E5A57]">
+              <span className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-[#E9E3DB]" />
+              <Icon className="h-6 w-6 relative" />
+            </span>
+            <div className="mt-2 font-medium">{title}</div>
+            <div className="mt-2 text-sm text-[#7D7875]">{desc}</div>
+          </div>
+        ))}
       </div>
     </section>
   );
