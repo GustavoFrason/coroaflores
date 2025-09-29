@@ -11,7 +11,7 @@ import { FRASES_FAIXA } from "@/lib/frases";
 const QA = [
   {
     q: "Vocês entregam no mesmo dia?",
-    a: "Sim. Para pedidos confirmados até 15h, entregamos no mesmo dia. Após esse horário, entregamos na manhã seguinte. Em casos urgentes, fale conosco pelo WhatsApp.",
+    a: "Sim. Entrega será realiza em até 3 horas após a confirmação do pedido.",
   },
   {
     q: "Como funciona a faixa personalizada?",

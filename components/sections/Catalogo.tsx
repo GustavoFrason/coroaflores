@@ -11,47 +11,65 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MODELOS } from "@/lib/models";
-import { formatCurrency } from "@/lib/utils";
 
-type Tamanho = "P" | "M" | "G";
+import { PRODUTOS } from "@/lib/models";
+import { formatCurrency, precoAtual } from "@/lib/utils";
 
 export default function Catalogo() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
-  // SEO – JSON-LD
+  const produtos = useMemo(() => (Array.isArray(PRODUTOS) ? PRODUTOS : []), []);
+
+  if (process.env.NODE_ENV !== "production") {
+    // eslint-disable-next-line no-console
+    console.log("[Catalogo] PRODUTOS:", produtos);
+    // @ts-expect-error
+    typeof window !== "undefined" && (window.__catalog = produtos);
+  }
+
   const jsonLd = useMemo(() => {
-    const graph = MODELOS.map((m) => ({
-      "@type": "Product",
-      name: m.nome,
-      image: siteUrl ? `${siteUrl}${m.img}` : m.img,
-      brand: "Coroas & Homenagens",
-      offers: {
-        "@type": "Offer",
-        priceCurrency: "BRL",
-        price: m.precoBase,
-        availability: "https://schema.org/InStock",
-      },
-    }));
+    const graph = produtos.map((p) => {
+      const { valor } = precoAtual(p);
+      return {
+        "@type": "Product",
+        name: p.nome,
+        image: siteUrl ? `${siteUrl}${p.img}` : p.img,
+        brand: "Floricultura Larissa",
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "BRL",
+          price: valor,
+          availability: "https://schema.org/InStock",
+          ...(p.promoFim ? { priceValidUntil: p.promoFim } : {}),
+        },
+      };
+    });
     return { "@context": "https://schema.org", "@graph": graph };
-  }, [siteUrl]);
+  }, [siteUrl, produtos]);
 
   return (
     <section id="catalogo" className="relative overflow-hidden bg-[#FAF8F5] text-[#5E5A57]">
       <div className="mx-auto max-w-[1400px] px-4 md:px-6 py-12">
         <div className="flex items-end justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-semibold">Modelos de Coroas</h2>
-          <p className="hidden sm:block text-sm text-[#4B5563]">
-            Escolha um modelo e peça pelo WhatsApp
+          <h2 className="text-2xl md:text-3xl font-serif">Coroas de Flores</h2>
+          <p className="hidden sm:block text-sm text-[#7D7875]">
+            {produtos.length > 0 ? `Temos ${produtos.length} opção(ões)` : "Catálogo em atualização"}
           </p>
         </div>
 
-        {/* 1 → 2 → 3 → 4 colunas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6 xl:gap-7">
-          {MODELOS.map((m, idx) => (
-            <CatalogCard key={m.id} modeloIndex={idx} {...m} />
-          ))}
-        </div>
+        {produtos.length === 0 ? (
+          <div className="rounded-2xl border border-[#E9E3DB] bg-white p-6">
+            <p className="text-sm text-[#7D7875]">
+              Nenhum produto carregado. Confira o import e o alias do path.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6 xl:gap-7">
+            {produtos.map((p, idx) => (
+              <CatalogCard key={p.id} produtoIndex={idx} {...p} />
+            ))}
+          </div>
+        )}
       </div>
 
       <script
@@ -64,79 +82,70 @@ export default function Catalogo() {
 
 /* ---------------- Card isolado ---------------- */
 
+type CardProps = (typeof PRODUTOS)[number] & { produtoIndex: number };
+
 function CatalogCard({
   id,
   nome,
   img,
   precoBase,
-  cores,
+  precoPromo,
+  promoInicio,
+  promoFim,
+  coresSugeridas = [],
   badge,
-  modeloIndex,
-}: {
-  id: string;
-  nome: string;
-  img: string;
-  precoBase: number;
-  cores: string[];
-  badge?: string;
-  modeloIndex: number;
-}) {
-  const [tamanho, setTamanho] = useState<Tamanho>("M");
-  const [cor, setCor] = useState<string>(cores?.[0] ?? "");
+  produtoIndex,
+}: CardProps) {
+  const [cor, setCor] = useState<string>(coresSugeridas[0] ?? "");
+  const alt = `${nome}${cor ? ` — cor ${cor}` : ""}`;
 
-  const hrefQuick = `#pedido-rapido?m=${encodeURIComponent(nome)}&cor=${encodeURIComponent(
-    cor || ""
-  )}&t=${tamanho}&utm=cat_card_${id}`;
+  const { valor, de, desconto, emPromocao } = precoAtual({
+    id,
+    nome,
+    img,
+    precoBase,
+    precoPromo,
+    promoInicio,
+    promoFim,
+    coresSugeridas,
+    badge,
+  });
 
-  const alt = `${nome} – arranjo de coroa${cor ? ` na cor ${cor}` : ""}`.trim();
+  // Link para o pedido rápido (pré-seleciona produto/cor) — sempre na raiz
+  const hrefQuick = `/#pedido-rapido?pid=${encodeURIComponent(id)}${
+    cor ? `&cor=${encodeURIComponent(cor)}` : ""
+  }&utm=cat_card_${id}`;
 
   return (
-    <Card className="overflow-hidden group rounded-2xl border hover:shadow-lg transition-shadow">
-      {/* Imagem (abre modal) */}
+    <Card className="overflow-hidden group rounded-2xl border hover:shadow-lg transition-shadow min-w-0">
       <Dialog>
-        <div className="relative w-full aspect-[4/3] sm:aspect-[3/2] xl:aspect-square">
+        {/* Imagem: agora em retrato e sem corte */}
+        <div className="relative w-full aspect-[3/4]">
           {badge && (
             <span className="absolute left-3 top-3 z-10 rounded-full bg-[#2E4A3B] px-3 py-1 text-xs text-white shadow">
               {badge}
             </span>
           )}
+          {emPromocao && (
+            <span className="absolute right-3 top-3 z-10 rounded-full bg-[#2E4A3B] px-3 py-1 text-xs text-white shadow">
+              -{desconto}%
+            </span>
+          )}
 
           <DialogTrigger asChild>
-            <button className="absolute inset-0 text-left">
+            <button className="absolute inset-0 text-left" aria-label={`Ver detalhes de ${nome}`}>
               <Image
                 src={img}
                 alt={alt}
                 fill
-                className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                // xl: 4 col (25vw) • lg: 3 col (33vw) • sm: 2 col (50vw) • mobile: 100vw
-                sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
-                priority={modeloIndex === 0}
+                className="object-contain bg-white p-2 transition-transform duration-300 group-hover:scale-[1.01]"
+                // 2 col no mobile → 50vw está ok
+                sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:640px) 50vw, 50vw"
+                priority={produtoIndex === 0}
               />
               <span className="sr-only">Ver detalhes de {nome}</span>
             </button>
           </DialogTrigger>
-
-          <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{nome}</DialogTitle>
-            </DialogHeader>
-            <div className="mt-2">
-              <div className="relative w-full aspect-[4/3] rounded-md overflow-hidden">
-                <Image src={img} alt={alt} fill className="object-cover" />
-              </div>
-              <div className="mt-3 text-sm text-[#4B5563] leading-relaxed">
-                <p>Medidas aproximadas por tamanho:</p>
-                <ul className="list-disc ml-5">
-                  <li>P: 45–55cm</li>
-                  <li>M: 60–70cm</li>
-                  <li>G: 80–90cm</li>
-                </ul>
-                <p className="mt-2">
-                  Faixa personalizada incluída. Entrega no mesmo dia em regiões atendidas.
-                </p>
-              </div>
-            </div>
-          </DialogContent>
         </div>
 
         <CardHeader className="pb-2">
@@ -144,32 +153,23 @@ function CatalogCard({
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Preço base */}
-          <div className="text-sm text-[#4B5563]">
-            A partir de{" "}
-            <span className="font-semibold text-[#1F2937]">{formatCurrency(precoBase)}</span>
+          {/* Preço de/por */}
+          <div className="flex items-baseline gap-2">
+            {de !== undefined && (
+              <span className="text-sm line-through text-[#7D7875]">{formatCurrency(de)}</span>
+            )}
+            <span className="text-xl font-serif text-[#2E4A3B]">{formatCurrency(valor)}</span>
+            {emPromocao && (
+              <span className="ml-1 text-xs rounded-full px-2 py-0.5 bg-[#2E4A3B] text-white">
+                -{desconto}%
+              </span>
+            )}
           </div>
 
-          {/* Tamanhos */}
-          <div className="flex items-center gap-2">
-            {(["P", "M", "G"] as const).map((t) => (
-              <Button
-                key={t}
-                variant={t === tamanho ? "default" : "outline"}
-                size="sm"
-                aria-pressed={t === tamanho}
-                onClick={() => setTamanho(t)}
-                className={t === tamanho ? "bg-[#2E4A3B] hover:bg-[#315F4F]" : ""}
-              >
-                {t}
-              </Button>
-            ))}
-          </div>
-
-          {/* Cores */}
-          {!!cores?.length && (
+          {/* Cores sugeridas */}
+          {!!coresSugeridas.length && (
             <div className="flex flex-wrap gap-2">
-              {cores.map((c) => (
+              {coresSugeridas.map((c) => (
                 <button
                   key={c}
                   type="button"
@@ -185,7 +185,7 @@ function CatalogCard({
             </div>
           )}
 
-          {/* Ações: empilhadas (mobile-first) */}
+          {/* Ações */}
           <div className="flex flex-col gap-2">
             <a
               href={hrefQuick}
@@ -195,38 +195,16 @@ function CatalogCard({
               Personalizar &amp; pedir
             </a>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full h-12 text-sm font-medium"
-                  aria-label={`Ver detalhes de ${nome}`}
-                >
-                  Ver detalhes
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>{nome}</DialogTitle>
-                </DialogHeader>
-                <div className="mt-2">
-                  <div className="relative w-full aspect-[4/3] rounded-md overflow-hidden">
-                    <Image src={img} alt={alt} fill className="object-cover" />
-                  </div>
-                  <div className="mt-3 text-sm text-[#4B5563] leading-relaxed">
-                    <p>Medidas aproximadas por tamanho:</p>
-                    <ul className="list-disc ml-5">
-                      <li>P: 45–55cm</li>
-                      <li>M: 60–70cm</li>
-                      <li>G: 80–90cm</li>
-                    </ul>
-                    <p className="mt-2">
-                      Faixa personalizada incluída. Entrega no mesmo dia em regiões atendidas.
-                    </p>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            {/* Botão “Ver detalhes” usa o MESMO Dialog */}
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full h-12 text-sm font-medium"
+                aria-label={`Ver detalhes de ${nome}`}
+              >
+                Ver detalhes
+              </Button>
+            </DialogTrigger>
           </div>
 
           {/* Divisor + micro-copy */}
@@ -247,6 +225,22 @@ function CatalogCard({
             </p>
           </div>
         </CardContent>
+
+        {/* Conteúdo do Dialog */}
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{nome}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2">
+            <div className="relative w-full aspect-[3/4] rounded-md overflow-hidden bg-white">
+              <Image src={img} alt={alt} fill className="object-contain p-2" />
+            </div>
+            <div className="mt-3 text-sm text-[#4B5563] leading-relaxed">
+              <p>Arranjo com flores selecionadas do dia, montagem cuidadosa e entrega ágil.</p>
+              <p className="mt-2">Faixa personalizada opcional no pedido.</p>
+            </div>
+          </div>
+        </DialogContent>
       </Dialog>
     </Card>
   );

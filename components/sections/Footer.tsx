@@ -1,14 +1,27 @@
 // components/sections/Footer.tsx
 import Link from "next/link";
-import { Phone, MessageCircle, MapPin, Clock, Mail, ShieldCheck, Lock, CreditCard, Truck } from "lucide-react";
+import {
+  Phone,
+  MessageCircle,
+  MapPin,
+  Clock,
+  Mail,
+  ShieldCheck,
+  Lock,
+  CreditCard,
+  Truck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WHATS_NUMBER } from "@/lib/constants";
 
 export default function Footer() {
   const year = new Date().getFullYear();
+
+  // Links dinâmicos
   const waLink = `https://wa.me/${WHATS_NUMBER}?text=${encodeURIComponent(
     "Olá! Preciso de ajuda para fazer um pedido de coroa de flores."
   )}`;
+  const telHref = telHrefFromWhats(WHATS_NUMBER);
 
   return (
     <footer className="bg-[#FAF8F5] text-[#5E5A57] border-t">
@@ -16,19 +29,28 @@ export default function Footer() {
       <div className="bg-[#2E4A3B] text-white">
         <div className="mx-auto max-w-7xl px-4 md:px-6 py-6 flex flex-col md:flex-row gap-3 md:gap-6 items-center justify-between">
           <div className="text-center md:text-left">
-            <p className="text-sm uppercase tracking-wide/loose opacity-80">Precisa de ajuda agora?</p>
-            <h3 className="text-lg md:text-xl font-medium">Atendimento humano 24h pelo WhatsApp</h3>
+            <p className="text-sm uppercase tracking-wide/loose opacity-80">
+              Precisa de ajuda agora?
+            </p>
+            <h3 className="text-lg md:text-xl font-medium">
+              Atendimento humano 24h pelo WhatsApp
+            </h3>
           </div>
 
           <div className="flex gap-2">
             <Button asChild className="bg-white text-[#2E4A3B] hover:bg-white/90">
-              <a href={waLink} target="_blank" rel="noreferrer" aria-label="Chamar no WhatsApp">
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Chamar no WhatsApp"
+              >
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Falar no WhatsApp
               </a>
             </Button>
             <Button asChild variant="outline" className="border-white text-white hover:bg-white/10">
-              <a href="tel:+550000000000" aria-label="Ligar agora">
+              <a href={telHref} aria-label="Ligar agora">
                 <Phone className="mr-2 h-4 w-4" />
                 Ligar agora
               </a>
@@ -42,22 +64,33 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Marca / Sobre */}
           <div>
-            <div className="font-serif text-xl text-[#2E4A3B]">Coroas &amp; Homenagens</div>
+            <div className="font-serif text-xl text-[#2E4A3B]">
+              Coroas &amp; Homenagens
+            </div>
             <p className="mt-3 text-sm leading-relaxed text-[#7D7875]">
-              Estúdio floral especializado em <strong>coroas de flores</strong>, com entrega ágil e faixa
-              personalizada. Cuidamos de cada detalhe com respeito e delicadeza.
+              Estúdio floral especializado em <strong>coroas de flores</strong>, com
+              entrega ágil e faixa personalizada. Cuidamos de cada detalhe com
+              respeito e delicadeza.
             </p>
 
             <ul className="mt-4 space-y-2 text-sm">
               <li className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
-                <a href={waLink} target="_blank" rel="noreferrer" className="hover:underline">
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                >
                   WhatsApp: {formatWhats(WHATS_NUMBER)}
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:contato@coroashomenagens.com.br" className="hover:underline">
+                <a
+                  href="mailto:contato@coroashomenagens.com.br"
+                  className="hover:underline"
+                >
                   contato@coroashomenagens.com.br
                 </a>
               </li>
@@ -87,8 +120,7 @@ export default function Footer() {
               <li className="flex items-start gap-2">
                 <ShieldCheck className="h-4 w-4 mt-0.5" />
                 <span>
-                  Faixa personalizada e montagem profissional. Imagens ilustrativas — flores podem variar por
-                  disponibilidade.
+                  Faixa personalizada e montagem profissional. Imagens ilustrativas — flores podem variar por disponibilidade.
                 </span>
               </li>
             </ul>
@@ -99,33 +131,28 @@ export default function Footer() {
             <div className="font-medium text-[#2E4A3B]">Links úteis</div>
             <ul className="mt-4 grid grid-cols-1 gap-2 text-sm">
               <li>
-                <Link href="#about" className="hover:underline">
-                  Sobre nós
-                </Link>
-              </li>
-              <li>
                 <Link href="#catalogo" className="hover:underline">
                   Modelos de coroas
                 </Link>
               </li>
               <li>
-                <Link href="#como-funciona" className="hover:underline">
-                  Como funciona
+                <Link href="#pedido-rapido" className="hover:underline">
+                  Pedido rápido
                 </Link>
               </li>
               <li>
-                <Link href="#depoimentos" className="hover:underline">
-                  Depoimentos
+                <Link href="/politica-privacidade" className="hover:underline">
+                  Política de Privacidade
                 </Link>
               </li>
               <li>
-                <Link href="#faq" className="hover:underline">
-                  Perguntas frequentes
+                <Link href="/termos" className="hover:underline">
+                  Termos de Uso
                 </Link>
               </li>
               <li>
-                <Link href="#contato" className="hover:underline">
-                  Contato
+                <Link href="/sitemap.xml" className="hover:underline">
+                  Sitemap
                 </Link>
               </li>
             </ul>
@@ -166,12 +193,16 @@ export default function Footer() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link href="#politica-privacidade" className="hover:underline">
+            <Link href="/politica-privacidade" className="hover:underline">
               Política de Privacidade
             </Link>
             <span className="opacity-40">•</span>
-            <Link href="#termos-uso" className="hover:underline">
+            <Link href="/termos" className="hover:underline">
               Termos de Uso
+            </Link>
+            <span className="opacity-40">•</span>
+            <Link href="/sitemap.xml" className="hover:underline">
+              Sitemap
             </Link>
           </div>
         </div>
@@ -182,9 +213,8 @@ export default function Footer() {
 
 /* ---------- pequenos helpers ---------- */
 
+/** Exibe o número no padrão +55 (41) 99999-9999 */
 function formatWhats(num: string) {
-  // Ex.: "5541999999999" -> "+55 (41) 99999-9999"
-  // Faça um parse simples para exibição; se o formato for diferente, apenas retorna.
   try {
     const only = num.replace(/\D/g, "");
     if (only.length < 12) return `+${only}`;
@@ -196,6 +226,12 @@ function formatWhats(num: string) {
   } catch {
     return num;
   }
+}
+
+/** Converte o número do WhatsApp em um href tel: */
+function telHrefFromWhats(num: string) {
+  const only = (num || "").toString().replace(/\D/g, "");
+  return only ? `tel:+${only}` : "tel:";
 }
 
 /** bolachas de pagamento / selo de segurança */

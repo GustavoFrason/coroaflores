@@ -14,9 +14,9 @@ export default function CutoffBanner({ cutoffHour = 15 }: { cutoffHour?: number 
         const ms = cutoff.getTime() - now.getTime();
         const h = Math.floor(ms / 36e5);
         const m = Math.floor((ms % 36e5) / 6e4);
-        setMsg(`Entrega hoje — finalize em ${h}h ${m}min`);
+        setMsg(`Realize seu pedido e recebe em no máximo 3 horas após a confirmação.`);
       } else {
-        setMsg("Pedidos após 15h: entrega amanhã pela manhã");
+        setMsg("Entrega em até 3 horas após a confirmação do pedido.");
       }
     };
     tick();

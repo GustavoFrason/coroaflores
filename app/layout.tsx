@@ -10,7 +10,7 @@ function JsonLd() {
   const org = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Coroas & Homenagens",
+    name: "Floricultura Larissa",
     url: base,
     logo: `${base}/favicon.ico`,
     contactPoint: [
@@ -26,7 +26,7 @@ function JsonLd() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     url: base,
-    name: "Coroas & Homenagens",
+    name: "Floricultura Larissa",
   };
 
   return (
@@ -49,19 +49,22 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coroaflores.vercel
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Coroas de Flores com Entrega no Mesmo Dia | Coroas & Homenagens",
+  title: {
+    default: "Floricultura Larissa",
+    template: "%s | Floricultura Larissa",
+  },
   description:
     "Coroas de flores com faixa personalizada e entrega no mesmo dia. Atendimento 24h pelo WhatsApp.",
-  alternates: { canonical: SITE_URL },
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "Coroas de Flores com Entrega no Mesmo Dia | Coroas & Homenagens",
+    title: "Coroas de Flores com Entrega no Mesmo Dia | Floricultura Larissa",
     description:
       "Coroas de flores com faixa personalizada e entrega no mesmo dia. Atendimento 24h pelo WhatsApp.",
-    url: SITE_URL,
-    siteName: "Coroas & Homenagens",
+    url: "/",
+    siteName: "Floricultura Larissa",
     images: [
       {
-        url: "/og-image.jpg", // coloque esse arquivo em /public (1200x630)
+        url: "/og-image.jpg", // /public/og-image.jpg (1200x630)
         width: 1200,
         height: 630,
         alt: "Coroa de flores – entrega no mesmo dia",
@@ -72,7 +75,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Coroas de Flores com Entrega no Mesmo Dia | Coroas & Homenagens",
+    title: "Coroas de Flores com Entrega no Mesmo Dia | Floricultura Larissa",
     description:
       "Coroas de flores com faixa personalizada e entrega no mesmo dia. Atendimento 24h pelo WhatsApp.",
     images: ["/og-image.jpg"],
@@ -81,7 +84,11 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  // Opcional: mude a cor do tema do navegador no mobile
+  icons: {
+    icon: [{ url: "/favicon.ico" }],
+    apple: [{ url: "/apple-touch-icon.png" }], // /public/apple-touch-icon.png (180x180)
+    shortcut: ["/favicon.ico"],
+  },
   themeColor: "#FAF8F5",
 };
 
