@@ -84,25 +84,14 @@ export function makeWaText(orcam: Orcamento) {
   return linhas.join("\n");
 }
 
-/**
- * Monta a URL do WhatsApp (wa.me) com o texto codificado.
- * Ex.: makeWaUrl("5541999999999", orcamento)
- */
+/** Monta a URL do WhatsApp (wa.me) com o texto codificado. */
 export function makeWaUrl(whatsNumber: string, orcam: Orcamento) {
   const texto = makeWaText(orcam);
   return `https://wa.me/${whatsNumber}?text=${encodeURIComponent(texto)}`;
 }
 
-/* =========================
-   Compat: função antiga
-   ========================= */
-
-/**
- * [DEPRECATED] Compatibilidade com a assinatura antiga.
- * Antes: makeWaLink({ modelo, tamanho })
- * Agora: use makeWaUrl(whatsNumber, orcamento).
- */
-export function makeWaLink(_old?: { modelo?: string; tamanho?: string }) {
+// Compat: função antiga (depreciada)
+export function makeWaLink() {
   console.warn("makeWaLink está depreciada. Use makeWaUrl(whatsNumber, orcamento).");
   return "about:blank";
 }

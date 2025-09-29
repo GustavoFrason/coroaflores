@@ -15,16 +15,23 @@ import {
 import { PRODUTOS } from "@/lib/models";
 import { formatCurrency, precoAtual } from "@/lib/utils";
 
+declare global {
+  interface Window {
+    __catalog?: typeof PRODUTOS;
+  }
+}
+
 export default function Catalogo() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
   const produtos = useMemo(() => (Array.isArray(PRODUTOS) ? PRODUTOS : []), []);
 
+  // 🔎 LOG (apenas em dev) — sem `any`
   if (process.env.NODE_ENV !== "production") {
-    // eslint-disable-next-line no-console
     console.log("[Catalogo] PRODUTOS:", produtos);
-    // @ts-expect-error
-    typeof window !== "undefined" && (window.__catalog = produtos);
+    if (typeof window !== "undefined") {
+      window.__catalog = produtos;
+    }
   }
 
   const jsonLd = useMemo(() => {
@@ -119,7 +126,7 @@ function CatalogCard({
   return (
     <Card className="overflow-hidden group rounded-2xl border hover:shadow-lg transition-shadow min-w-0">
       <Dialog>
-        {/* Imagem: agora em retrato e sem corte */}
+        {/* Imagem: retrato e sem corte */}
         <div className="relative w-full aspect-[3/4]">
           {badge && (
             <span className="absolute left-3 top-3 z-10 rounded-full bg-[#2E4A3B] px-3 py-1 text-xs text-white shadow">
@@ -139,7 +146,6 @@ function CatalogCard({
                 alt={alt}
                 fill
                 className="object-contain bg-white p-2 transition-transform duration-300 group-hover:scale-[1.01]"
-                // 2 col no mobile → 50vw está ok
                 sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:640px) 50vw, 50vw"
                 priority={produtoIndex === 0}
               />

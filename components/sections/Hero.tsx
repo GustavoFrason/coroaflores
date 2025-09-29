@@ -1,29 +1,70 @@
 "use client";
 
-import { useState } from "react";
-import { MessageCircle, Phone, Truck, Zap, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import {
+  MessageCircle,
+  Phone,
+  Truck,
+  Zap,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
-const images = ["/coroa_1.png", "/coroa_2.png"]; // ajuste para as suas imagens em /public
+const images: string[] = ["/coroa_1.png", "/coroa_2.png"];
 
 export default function Hero() {
   const telHref = "tel:+5541999999999";
   const waHref =
     "https://wa.me/5541999999999?text=Ol%C3%A1!%20Quero%20fazer%20um%20pedido%20de%20coroa%20de%20flores.";
   const verModelosHref = "#catalogo";
+
   const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   const prevSlide = () => setCurrent((c) => (c - 1 + images.length) % images.length);
   const nextSlide = () => setCurrent((c) => (c + 1) % images.length);
+
+  // Autoplay
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setCurrent((c) => (c + 1) % images.length), 4000);
+    return () => clearInterval(id);
+  }, [paused]);
+
+  // Teclado
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") prevSlide();
+      if (e.key === "ArrowRight") nextSlide();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Swipe
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 30) {
+      if (dx > 0) prevSlide();
+      else nextSlide();
+    }
+    touchStartX.current = null;
+  };
 
   return (
     <section className="relative overflow-hidden bg-[#FAF8F5] text-[#5E5A57]">
       {/* Header */}
       <header className="w-full border-b bg-[#FAF8F5]/90 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between">
-          {/* Logo */}
-          <div className="font-serif text-lg">Coroas & Homenagens</div>
+          <div className="font-serif text-lg">Coroas &amp; Homenagens</div>
 
-          {/* Menu simples */}
           <nav className="hidden md:flex gap-6 text-sm">
             <a href="#about" className="hover:text-black">Sobre</a>
             <a href="#catalogo" className="hover:text-black">Coroas</a>
@@ -32,7 +73,6 @@ export default function Hero() {
             <a href="#contato" className="hover:text-black">Contato</a>
           </nav>
 
-          {/* Telefone */}
           <div className="text-sm">
             Ligue:{" "}
             <a
@@ -79,6 +119,8 @@ export default function Hero() {
               rel="noopener noreferrer"
               aria-label="Abrir WhatsApp para fazer pedido"
               className="h-12 px-5 inline-flex items-center gap-2 rounded-md bg-[#2E4A3B] hover:bg-[#315F4F] text-white"
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
             >
               <MessageCircle className="h-4 w-4" />
               Pedir pelo WhatsApp
@@ -104,12 +146,23 @@ export default function Hero() {
         </div>
 
         {/* Carrossel de Imagens */}
-        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.06)]">
-          <img
+        <div
+          className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.06)]"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <Image
             src={images[current]}
             alt={`Coroa de flores – imagem ${current + 1} de ${images.length}`}
-            className="h-full w-full object-cover transition-opacity duration-500"
+            fill
+            className="object-cover"
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            priority
           />
+
+          {/* Controles */}
           <button
             onClick={prevSlide}
             className="absolute top-1/2 left-3 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow"

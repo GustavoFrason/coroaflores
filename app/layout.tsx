@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 // Opcional: Vercel Analytics
@@ -89,7 +89,13 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png" }], // /public/apple-touch-icon.png (180x180)
     shortcut: ["/favicon.ico"],
   },
+};
+
+// ✅ Next 15: themeColor vai no viewport
+export const viewport: Viewport = {
   themeColor: "#FAF8F5",
+  // opcional:
+  // colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

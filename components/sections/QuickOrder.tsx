@@ -48,14 +48,13 @@ export default function QuickOrder() {
   const [localDataHora, setLocalDataHora] = useState("");
   const [localMaps, setLocalMaps] = useState("");
 
-  // Ref para focar no primeiro campo ao vir do catálogo
+  // Ref para focar no select quando vier do catálogo
   const produtoSelectRef = useRef<HTMLSelectElement>(null);
 
   // Lê #pedido-rapido?pid=...&cor=... e pré-seleciona produto/cor
   useEffect(() => {
     const applyFromHash = () => {
-      if (typeof window === "undefined") return;
-      if (!hasCatalog) return;
+      if (typeof window === "undefined" || !hasCatalog) return;
 
       const hash = window.location.hash || "";
       const [path, query = ""] = hash.split("?");
@@ -73,7 +72,6 @@ export default function QuickOrder() {
         if (corParam && prod.coresSugeridas?.includes(corParam)) {
           setCor(corParam);
         }
-        // foca no primeiro campo do formulário
         setTimeout(() => produtoSelectRef.current?.focus(), 0);
         return;
       }
@@ -88,65 +86,24 @@ export default function QuickOrder() {
       }
     };
 
-    applyFromHash(); // aplica na montagem
-    window.addEventListener("hashchange", applyFromHash); // e em mudanças
+    applyFromHash();
+    window.addEventListener("hashchange", applyFromHash);
     return () => window.removeEventListener("hashchange", applyFromHash);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produtoId, hasCatalog]);
 
-  /** Se por algum motivo produtoId não vier, seleciona o primeiro disponível */
+  // Se por algum motivo produtoId não vier, seleciona o primeiro disponível
   useEffect(() => {
     if (!produtoId && hasCatalog) {
       setProdutoId(PRODUTOS[0].id as ProdutoId);
     }
   }, [produtoId, hasCatalog]);
 
-  /** Quando trocar o produto, seta a primeira cor sugerida (se existir) */
-  useEffect(() => {
-    if (!produtoId) return;
-    const p = getProduto(produtoId);
-    const first = p.coresSugeridas?.[0];
-    setCor(first ?? "");
-  }, [produtoId]);
-
-  /** Guards */
-  if (!hasCatalog) {
-    return (
-      <section
-        id="pedido-rapido"
-        className="bg-white border border-[#E9E3DB] rounded-xl p-4 md:p-6 scroll-mt-24"
-        aria-labelledby="quickorder-title"
-      >
-        <h3 id="quickorder-title" className="text-lg font-semibold">
-          Monte sua coroa
-        </h3>
-        <p className="mt-2 text-sm text-[#7D7875]">Catálogo vazio.</p>
-      </section>
-    );
-  }
-
-  if (!produtoId) {
-    return (
-      <section
-        id="pedido-rapido"
-        className="bg-white border border-[#E9E3DB] rounded-xl p-4 md:p-6 scroll-mt-24"
-        aria-labelledby="quickorder-title"
-      >
-        <h3 id="quickorder-title" className="text-lg font-semibold">
-          Monte sua coroa
-        </h3>
-        <p className="mt-2 text-sm text-[#7D7875]">Carregando produtos…</p>
-      </section>
-    );
-  }
-
   /** ========================
-   * Derivações e helpers
+   * Derivações (NENHUMA HOOK CONDICIONAL)
    * ======================== */
-  const produto = getProduto(produtoId);
-  const coresDoProduto = produto.coresSugeridas ?? [];
+  const produto = produtoId ? getProduto(produtoId) : null;
+  const coresDoProduto = produto?.coresSugeridas ?? [];
 
-  // Monta um resumo de local
   const localResumo = useMemo(() => {
     if (!informarLocalAgora) return "Confirmarei por WhatsApp";
     const partes = [
@@ -173,25 +130,28 @@ export default function QuickOrder() {
     localMaps,
   ]);
 
-  // Preço “de/por”
-  const { valor: precoAtualProduto, de: precoDe, desconto, emPromocao } = precoAtual(produto);
+  const { valor: precoAtualProduto, de: precoDe, desconto, emPromocao } = useMemo(() => {
+    if (!produto) return { valor: 0, de: undefined as number | undefined, desconto: 0, emPromocao: false };
+    return precoAtual(produto);
+  }, [produto]);
 
-  // Resumo financeiro (base + faixa)
-  const resumo = useMemo(
-    () =>
-      calcularTotal({
-        produtoId,
-        faixaPersonalizada: faixa.trim().length > 0,
-        textoFaixa: faixa.trim() || undefined,
-        homenageado: destinatario || undefined,
-        cores: cor ? [cor] : [],
-        localEntrega: localResumo,
-      }),
-    [produtoId, faixa, destinatario, cor, localResumo]
-  );
+  const resumo = useMemo(() => {
+    if (!produtoId) {
+      const extra = faixa.trim().length > 0 ? PRECO_FAIXA : 0;
+      return { base: 0, extraFaixa: extra, total: extra };
+    }
+    return calcularTotal({
+      produtoId,
+      faixaPersonalizada: faixa.trim().length > 0,
+      textoFaixa: faixa.trim() || undefined,
+      homenageado: destinatario || undefined,
+      cores: cor ? [cor] : [],
+      localEntrega: localResumo,
+    });
+  }, [produtoId, faixa, destinatario, cor, localResumo]);
 
-  // Link do WhatsApp com UTM
   const waHref = useMemo(() => {
+    if (!produtoId) return "#";
     const url = makeWaUrl(WHATS_NUMBER, {
       produtoId,
       faixaPersonalizada: faixa.trim().length > 0,
@@ -203,6 +163,8 @@ export default function QuickOrder() {
     const utmContent = informarLocalAgora ? "quickorder_cta_local_on" : "quickorder_cta_local_off";
     return withUtm(url, utmContent);
   }, [produtoId, faixa, destinatario, cor, localResumo, informarLocalAgora]);
+
+  const disabledAll = !hasCatalog || !produtoId;
 
   /** ========================
    * Render
@@ -220,286 +182,305 @@ export default function QuickOrder() {
         Personalize rapidamente e finalize pelo WhatsApp. Atendimento 24h.
       </p>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        {/* Produto */}
-        <div>
-          <label className="block text-sm mb-1">Produto</label>
-          <select
-            ref={produtoSelectRef}
-            className="w-full rounded-md border border-[#E9E3DB] p-2 bg-white"
-            value={produtoId ?? ""}
-            onChange={(e) => setProdutoId(e.target.value as ProdutoId)}
-          >
-            {PRODUTOS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome}
-              </option>
-            ))}
-          </select>
+      {!hasCatalog ? (
+        <p className="mt-4 text-sm text-[#7D7875]">Catálogo vazio.</p>
+      ) : !produtoId ? (
+        <p className="mt-4 text-sm text-[#7D7875]">Carregando produtos…</p>
+      ) : (
+        <>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {/* Produto */}
+            <div>
+              <label className="block text-sm mb-1">Produto</label>
+              <select
+                ref={produtoSelectRef}
+                className="w-full rounded-md border border-[#E9E3DB] p-2 bg-white"
+                value={produtoId ?? ""}
+                onChange={(e) => setProdutoId(e.target.value as ProdutoId)}
+                disabled={!hasCatalog}
+              >
+                {PRODUTOS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome}
+                  </option>
+                ))}
+              </select>
 
-          {/* Preço “de/por” */}
-          <div className="mt-2 flex items-baseline gap-2">
-            {precoDe !== undefined && (
-              <span className="text-sm line-through text-[#7D7875]">
-                {formatCurrency(precoDe)}
-              </span>
-            )}
-            <span className="text-xl font-serif text-[#2E4A3B]">
-              {formatCurrency(precoAtualProduto)}
-            </span>
-            {emPromocao && (
-              <span className="ml-2 text-xs rounded-full px-2 py-0.5 bg-[#2E4A3B] text-white">
-                -{desconto}%
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Cores */}
-        <div>
-          <label className="block text-sm mb-1">Cores do arranjo</label>
-          <select
-            className="w-full rounded-md border border-[#E9E3DB] p-2 bg-white"
-            value={cor}
-            onChange={(e) => setCor(e.target.value)}
-          >
-            {coresDoProduto.length > 0 ? (
-              coresDoProduto.map((c) => <option key={c}>{c}</option>)
-            ) : (
-              <option value="">Sem preferência</option>
-            )}
-          </select>
-        </div>
-
-        {/* Local do velório */}
-        <fieldset className="md:col-span-2 border border-[#E9E3DB] rounded-md p-3">
-          <legend className="px-2 text-sm text-[#5E5A57]">Local do velório</legend>
-
-          {/* Toggle de visibilidade */}
-          <div className="flex flex-wrap items-center gap-3 mb-3">
-            <div className="inline-flex items-center gap-2">
-              <input
-                id="informar-agora"
-                type="radio"
-                name="modo-local"
-                checked={informarLocalAgora}
-                onChange={() => setInformarLocalAgora(true)}
-              />
-              <label htmlFor="informar-agora" className="text-sm">
-                Informar local agora
-              </label>
-            </div>
-
-            <div className="inline-flex items-center gap-2">
-              <input
-                id="confirmar-depois"
-                type="radio"
-                name="modo-local"
-                checked={!informarLocalAgora}
-                onChange={() => setInformarLocalAgora(false)}
-              />
-              <label htmlFor="confirmar-depois" className="text-sm">
-                Confirmar depois no WhatsApp
-              </label>
-            </div>
-          </div>
-
-          {/* Área colapsável */}
-          <Collapsible open={informarLocalAgora}>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div>
-                <label className="block text-sm mb-1">Tipo</label>
-                <select
-                  className="w-full rounded-md border border-[#E9E3DB] p-2 bg-white"
-                  value={localTipo}
-                  onChange={(e) => setLocalTipo(e.target.value as TipoLocal)}
-                  disabled={!informarLocalAgora}
-                >
-                  {["Capela", "Cemitério", "Hospital", "Igreja", "Residência", "Outro"].map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm mb-1">Nome do local</label>
-                <input
-                  className="w-full rounded-md border border-[#E9E3DB] p-2"
-                  placeholder="Ex.: Capela Vaticano / Cemitério Municipal"
-                  value={localNome}
-                  onChange={(e) => setLocalNome(e.target.value)}
-                  disabled={!informarLocalAgora}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm mb-1">Sala/Ala (opcional)</label>
-                <input
-                  className="w-full rounded-md border border-[#E9E3DB] p-2"
-                  placeholder="Ex.: Sala 2"
-                  value={localSala}
-                  onChange={(e) => setLocalSala(e.target.value)}
-                  disabled={!informarLocalAgora}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm mb-1">Cidade/UF (opcional)</label>
-                <input
-                  className="w-full rounded-md border border-[#E9E3DB] p-2"
-                  placeholder="Ex.: Curitiba/PR"
-                  value={localCidade}
-                  onChange={(e) => setLocalCidade(e.target.value)}
-                  disabled={!informarLocalAgora}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm mb-1">Endereço (opcional)</label>
-                <input
-                  className="w-full rounded-md border border-[#E9E3DB] p-2"
-                  placeholder="Rua, número, bairro"
-                  value={localEndereco}
-                  onChange={(e) => setLocalEndereco(e.target.value)}
-                  disabled={!informarLocalAgora}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm mb-1">Ponto de referência (opcional)</label>
-                <input
-                  className="w-full rounded-md border border-[#E9E3DB] p-2"
-                  placeholder="Ex.: Próximo à portaria principal"
-                  value={localReferencia}
-                  onChange={(e) => setLocalReferencia(e.target.value)}
-                  disabled={!informarLocalAgora}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm mb-1">Data/Hora (opcional)</label>
-                <input
-                  className="w-full rounded-md border border-[#E9E3DB] p-2"
-                  placeholder="Ex.: Hoje 15h / 14/03 às 9h"
-                  value={localDataHora}
-                  onChange={(e) => setLocalDataHora(e.target.value)}
-                  disabled={!informarLocalAgora}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm mb-1">Link do Google Maps (opcional)</label>
-                <input
-                  className="w-full rounded-md border border-[#E9E3DB] p-2"
-                  placeholder="Cole aqui o link do Maps"
-                  value={localMaps}
-                  onChange={(e) => setLocalMaps(e.target.value)}
-                  disabled={!informarLocalAgora}
-                />
+              {/* Preço “de/por” */}
+              <div className="mt-2 flex items-baseline gap-2">
+                {precoDe !== undefined && (
+                  <span className="text-sm line-through text-[#7D7875]">
+                    {formatCurrency(precoDe)}
+                  </span>
+                )}
+                <span className="text-xl font-serif text-[#2E4A3B]">
+                  {formatCurrency(precoAtualProduto)}
+                </span>
+                {emPromocao && (
+                  <span className="ml-2 text-xs rounded-full px-2 py-0.5 bg-[#2E4A3B] text-white">
+                    -{desconto}%
+                  </span>
+                )}
               </div>
             </div>
-          </Collapsible>
 
-          {!informarLocalAgora && (
-            <p className="mt-2 text-[11px] text-[#7D7875]">
-              Tudo bem! Vamos confirmar o local rapidamente pelo WhatsApp.
+            {/* Cores */}
+            <div>
+              <label className="block text-sm mb-1">Cores do arranjo</label>
+              <select
+                className="w-full rounded-md border border-[#E9E3DB] p-2 bg-white"
+                value={cor}
+                onChange={(e) => setCor(e.target.value)}
+                disabled={disabledAll}
+              >
+                {coresDoProduto.length > 0 ? (
+                  coresDoProduto.map((c) => <option key={c}>{c}</option>)
+                ) : (
+                  <option value="">Sem preferência</option>
+                )}
+              </select>
+            </div>
+
+            {/* Local do velório */}
+            <fieldset className="md:col-span-2 border border-[#E9E3DB] rounded-md p-3">
+              <legend className="px-2 text-sm text-[#5E5A57]">Local do velório</legend>
+
+              {/* Toggle de visibilidade */}
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <div className="inline-flex items-center gap-2">
+                  <input
+                    id="informar-agora"
+                    type="radio"
+                    name="modo-local"
+                    checked={informarLocalAgora}
+                    onChange={() => setInformarLocalAgora(true)}
+                    disabled={disabledAll}
+                  />
+                  <label htmlFor="informar-agora" className="text-sm">
+                    Informar local agora
+                  </label>
+                </div>
+
+                <div className="inline-flex items-center gap-2">
+                  <input
+                    id="confirmar-depois"
+                    type="radio"
+                    name="modo-local"
+                    checked={!informarLocalAgora}
+                    onChange={() => setInformarLocalAgora(false)}
+                    disabled={disabledAll}
+                  />
+                  <label htmlFor="confirmar-depois" className="text-sm">
+                    Confirmar depois no WhatsApp
+                  </label>
+                </div>
+              </div>
+
+              {/* Área colapsável */}
+              <Collapsible open={informarLocalAgora}>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label className="block text-sm mb-1">Tipo</label>
+                    <select
+                      className="w-full rounded-md border border-[#E9E3DB] p-2 bg-white"
+                      value={localTipo}
+                      onChange={(e) => setLocalTipo(e.target.value as TipoLocal)}
+                      disabled={!informarLocalAgora || disabledAll}
+                    >
+                      {["Capela", "Cemitério", "Hospital", "Igreja", "Residência", "Outro"].map(
+                        (t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Nome do local</label>
+                    <input
+                      className="w-full rounded-md border border-[#E9E3DB] p-2"
+                      placeholder="Ex.: Capela Vaticano / Cemitério Municipal"
+                      value={localNome}
+                      onChange={(e) => setLocalNome(e.target.value)}
+                      disabled={!informarLocalAgora || disabledAll}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Sala/Ala (opcional)</label>
+                    <input
+                      className="w-full rounded-md border border-[#E9E3DB] p-2"
+                      placeholder="Ex.: Sala 2"
+                      value={localSala}
+                      onChange={(e) => setLocalSala(e.target.value)}
+                      disabled={!informarLocalAgora || disabledAll}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Cidade/UF (opcional)</label>
+                    <input
+                      className="w-full rounded-md border border-[#E9E3DB] p-2"
+                      placeholder="Ex.: Curitiba/PR"
+                      value={localCidade}
+                      onChange={(e) => setLocalCidade(e.target.value)}
+                      disabled={!informarLocalAgora || disabledAll}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm mb-1">Endereço (opcional)</label>
+                    <input
+                      className="w-full rounded-md border border-[#E9E3DB] p-2"
+                      placeholder="Rua, número, bairro"
+                      value={localEndereco}
+                      onChange={(e) => setLocalEndereco(e.target.value)}
+                      disabled={!informarLocalAgora || disabledAll}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Ponto de referência (opcional)</label>
+                    <input
+                      className="w-full rounded-md border border-[#E9E3DB] p-2"
+                      placeholder="Ex.: Próximo à portaria principal"
+                      value={localReferencia}
+                      onChange={(e) => setLocalReferencia(e.target.value)}
+                      disabled={!informarLocalAgora || disabledAll}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-1">Data/Hora (opcional)</label>
+                    <input
+                      className="w-full rounded-md border border-[#E9E3DB] p-2"
+                      placeholder="Ex.: Hoje 15h / 14/03 às 9h"
+                      value={localDataHora}
+                      onChange={(e) => setLocalDataHora(e.target.value)}
+                      disabled={!informarLocalAgora || disabledAll}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm mb-1">Link do Google Maps (opcional)</label>
+                    <input
+                      className="w-full rounded-md border border-[#E9E3DB] p-2"
+                      placeholder="Cole aqui o link do Maps"
+                      value={localMaps}
+                      onChange={(e) => setLocalMaps(e.target.value)}
+                      disabled={!informarLocalAgora || disabledAll}
+                    />
+                  </div>
+                </div>
+              </Collapsible>
+
+              {!informarLocalAgora && (
+                <p className="mt-2 text-[11px] text-[#7D7875]">
+                  Tudo bem! Vamos confirmar o local rapidamente pelo WhatsApp.
+                </p>
+              )}
+            </fieldset>
+
+            {/* Nota de frete */}
+            <p className="text-[11px] text-[#7D7875] md:col-span-2 -mt-2" role="note">
+              <strong>Frete:</strong> calculado conforme a região/cidade informada. Confirmamos o valor no WhatsApp.
             </p>
-          )}
-        </fieldset>
 
-        {/* Nota de frete (contextual ao local informado) */}
-        <p className="text-[11px] text-[#7D7875] md:col-span-2 -mt-2" role="note">
-          <strong>Frete:</strong> calculado conforme a região/cidade informada. Confirmamos o valor no WhatsApp.
-        </p>
-
-        {/* Faixa personalizada */}
-        <div className="md:col-span-2">
-          <label className="block text-sm mb-1">
-            Faixa personalizada{" "}
-            <span className="text-[#7D7875]">
-              (até 40 caracteres) — custo adicional de {formatCurrency(PRECO_FAIXA)}
-            </span>
-          </label>
-          <input
-            className="w-full rounded-md border border-[#E9E3DB] p-2"
-            maxLength={40}
-            placeholder='Ex.: Com carinho, família Silva'
-            value={faixa}
-            onChange={(e) => setFaixa(e.target.value)}
-            aria-describedby="faixa-help faixa-count"
-          />
-          <p id="faixa-help" className="mt-1 text-xs text-[#7D7875]">
-            Dica: toque em uma sugestão abaixo para copiar automaticamente.
-          </p>
-          <p id="faixa-count" className="text-[11px] text-[#7D7875]" aria-live="polite">
-            {faixa.length}/40
-          </p>
-          <FrasesFaixa onPick={setFaixa} className="mt-2 flex flex-wrap gap-2 text-sm" />
-        </div>
-
-        {/* Destinatário */}
-        <div className="md:col-span-2">
-          <label className="block text-sm mb-1">
-            Nome do(a) homenageado(a) <span className="text-[#7D7875]">(opcional)</span>
-          </label>
-          <input
-            className="w-full rounded-md border border-[#E9E3DB] p-2"
-            placeholder="Ex.: Antônio Pereira"
-            value={destinatario}
-            onChange={(e) => setDestinatario(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Resumo de preço */}
-      <div className="mt-4 rounded-lg bg-[#FAF8F5] border border-[#EFEAE6] p-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="text-[#5E5A57]">
-            <div className="flex items-baseline gap-2">
-              {precoDe !== undefined && (
-                <span className="text-sm line-through text-[#7D7875]">
-                  {formatCurrency(precoDe)}
+            {/* Faixa personalizada */}
+            <div className="md:col-span-2">
+              <label className="block text-sm mb-1">
+                Faixa personalizada{" "}
+                <span className="text-[#7D7875]">
+                  (até 40 caracteres) — custo adicional de {formatCurrency(PRECO_FAIXA)}
                 </span>
-              )}
-              <span className="text-xl font-serif text-[#2E4A3B]">
-                {formatCurrency(precoAtualProduto)}
-              </span>
-              {emPromocao && (
-                <span className="ml-2 text-xs rounded-full px-2 py-0.5 bg-[#2E4A3B] text-white">
-                  -{desconto}%
-                </span>
-              )}
+              </label>
+              <input
+                className="w-full rounded-md border border-[#E9E3DB] p-2"
+                maxLength={40}
+                placeholder='Ex.: Com carinho, família Silva'
+                value={faixa}
+                onChange={(e) => setFaixa(e.target.value)}
+                aria-describedby="faixa-help faixa-count"
+                disabled={disabledAll}
+              />
+              <p id="faixa-help" className="mt-1 text-xs text-[#7D7875]">
+                Dica: toque em uma sugestão abaixo para copiar automaticamente.
+              </p>
+              <p id="faixa-count" className="text-[11px] text-[#7D7875]" aria-live="polite">
+                {faixa.length}/40
+              </p>
+              <FrasesFaixa onPick={setFaixa} className="mt-2 flex flex-wrap gap-2 text-sm" />
             </div>
-            {faixa.trim().length > 0 && (
-              <div className="text-sm">
-                Faixa: <strong>{formatCurrency(PRECO_FAIXA)}</strong>
+
+            {/* Destinatário */}
+            <div className="md:col-span-2">
+              <label className="block text-sm mb-1">
+                Nome do(a) homenageado(a) <span className="text-[#7D7875]">(opcional)</span>
+              </label>
+              <input
+                className="w-full rounded-md border border-[#E9E3DB] p-2"
+                placeholder="Ex.: Antônio Pereira"
+                value={destinatario}
+                onChange={(e) => setDestinatario(e.target.value)}
+                disabled={disabledAll}
+              />
+            </div>
+          </div>
+
+          {/* Resumo de preço */}
+          <div className="mt-4 rounded-lg bg-[#FAF8F5] border border-[#EFEAE6] p-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="text-[#5E5A57]">
+                <div className="flex items-baseline gap-2">
+                  {precoDe !== undefined && (
+                    <span className="text-sm line-through text-[#7D7875]">
+                      {formatCurrency(precoDe)}
+                    </span>
+                  )}
+                  <span className="text-xl font-serif text-[#2E4A3B]">
+                    {formatCurrency(precoAtualProduto)}
+                  </span>
+                  {emPromocao && (
+                    <span className="ml-2 text-xs rounded-full px-2 py-0.5 bg-[#2E4A3B] text-white">
+                      -{desconto}%
+                    </span>
+                  )}
+                </div>
+                {faixa.trim().length > 0 && (
+                  <div className="text-sm">
+                    Faixa: <strong>{formatCurrency(PRECO_FAIXA)}</strong>
+                  </div>
+                )}
+                <div className="text-xs text-[#7D7875] mt-1">Frete calculado conforme a região.</div>
               </div>
-            )}
-            <div className="text-xs text-[#7D7875] mt-1">Frete calculado conforme a região.</div>
+              <div className="text-right">
+                <div className="text-sm text-[#7D7875]">Total estimado</div>
+                <div className="text-2xl font-serif text-[#2E4A3B]">
+                  {formatCurrency(resumo.total)}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-[#7D7875]">Total estimado</div>
-            <div className="text-2xl font-serif text-[#2E4A3B]">{formatCurrency(resumo.total)}</div>
-          </div>
-        </div>
-      </div>
 
-      {/* CTA */}
-      <a
-        href={waHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-[#2E4A3B] px-4 py-3 text-white"
-        aria-label="Finalizar pedido no WhatsApp"
-      >
-        Finalizar no WhatsApp
-      </a>
+          {/* CTA */}
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-[#2E4A3B] px-4 py-3 text-white disabled:opacity-60"
+            aria-label="Finalizar pedido no WhatsApp"
+            aria-disabled={!produtoId}
+          >
+            Finalizar no WhatsApp
+          </a>
 
-      <p className="mt-2 text-xs text-[#7D7875]">
-        Confirmamos detalhes e valores via WhatsApp. PIX compensa na hora.
-      </p>
+          <p className="mt-2 text-xs text-[#7D7875]">
+            Confirmamos detalhes e valores via WhatsApp. PIX compensa na hora.
+          </p>
+        </>
+      )}
     </section>
   );
 }
