@@ -26,12 +26,10 @@ export default function Catalogo() {
 
   const produtos = useMemo(() => (Array.isArray(PRODUTOS) ? PRODUTOS : []), []);
 
-  // 🔎 LOG (apenas em dev) — sem `any`
+  // log dev
   if (process.env.NODE_ENV !== "production") {
     console.log("[Catalogo] PRODUTOS:", produtos);
-    if (typeof window !== "undefined") {
-      window.__catalog = produtos;
-    }
+    if (typeof window !== "undefined") window.__catalog = produtos;
   }
 
   const jsonLd = useMemo(() => {
@@ -118,10 +116,29 @@ function CatalogCard({
     badge,
   });
 
-  // Link para o pedido rápido (pré-seleciona produto/cor) — sempre na raiz
-  const hrefQuick = `/#pedido-rapido?pid=${encodeURIComponent(id)}${
-    cor ? `&cor=${encodeURIComponent(cor)}` : ""
-  }&utm=cat_card_${id}`;
+  // Handler robusto para mobile: muda o hash, faz scroll e dispara hashchange
+  const handlePersonalizar = () => {
+    try {
+      if (typeof window === "undefined") return;
+
+      const hash = `#pedido-rapido?pid=${encodeURIComponent(id)}${
+        cor ? `&cor=${encodeURIComponent(cor)}` : ""
+      }&utm=cat_card_${id}`;
+
+      const { pathname, search } = window.location;
+      window.history.pushState(null, "", `${pathname}${search}${hash}`);
+
+      const target = document.getElementById("pedido-rapido");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    } catch {
+      // fallback
+      window.location.href = `/#pedido-rapido?pid=${encodeURIComponent(id)}${
+        cor ? `&cor=${encodeURIComponent(cor)}` : ""
+      }&utm=cat_card_${id}`;
+    }
+  };
 
   return (
     <Card className="overflow-hidden group rounded-2xl border hover:shadow-lg transition-shadow min-w-0">
@@ -193,13 +210,14 @@ function CatalogCard({
 
           {/* Ações */}
           <div className="flex flex-col gap-2">
-            <a
-              href={hrefQuick}
-              className="w-full inline-flex h-12 items-center justify-center rounded-md bg-[#2E4A3B] px-4 text-white text-sm font-medium"
-              aria-label="Personalizar e pedir no WhatsApp"
+            <button
+              type="button"
+              onClick={handlePersonalizar}
+              className="w-full inline-flex h-12 items-center justify-center rounded-md bg-[#2E4A3B] px-4 text-white text-sm font-medium hover:bg-[#315F4F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2E4A3B]"
+              aria-label="Personalizar e pedir"
             >
               Personalizar &amp; pedir
-            </a>
+            </button>
 
             {/* Botão “Ver detalhes” usa o MESMO Dialog */}
             <DialogTrigger asChild>
@@ -217,15 +235,15 @@ function CatalogCard({
           <div className="pt-3 border-t border-slate-200">
             <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[#68707a]">
               <span className="inline-flex items-center gap-1">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                 Entrega no mesmo dia
               </span>
               <span className="inline-flex items-center gap-1">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
                 Pagamento seguro
               </span>
               <span className="inline-flex items-center gap-1">
-                <span className="h-2.5 w-2.5 rounded-full bg-slate-400"></span>
+                <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
                 Atendimento 24h
               </span>
             </p>
