@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   MessageCircle,
@@ -12,50 +12,77 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const images: string[] = ["/coroa_1.png", "/coroa_2.png"];
+/**
+ * Coloque as imagens editadas em /public
+ * Ex.: /public/coroa_1.webp, /public/coroa_2.webp
+ */
+const images: string[] = ["/coroa_1.png", "/coroa_2.png","/coroa_3.png", "/coroa_4.png"];
 
 export default function Hero() {
-  const telHref = "tel:+5541999999999";
+  const telHref = "tel:+5541999043865";
   const waHref =
-    "https://wa.me/5541999999999?text=Ol%C3%A1!%20Quero%20fazer%20um%20pedido%20de%20coroa%20de%20flores.";
+    "https://wa.me/5541999043865?text=Ol%C3%A1!%20Quero%20fazer%20um%20pedido%20de%20coroa%20de%20flores.";
   const verModelosHref = "#catalogo";
 
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const timerRef = useRef<number | null>(null);
 
-  const prevSlide = () => setCurrent((c) => (c - 1 + images.length) % images.length);
+  /** respeita prefers-reduced-motion */
+  const prefersReduced = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
+    []
+  );
+
+  const prevSlide = () =>
+    setCurrent((c) => (c - 1 + images.length) % images.length);
   const nextSlide = () => setCurrent((c) => (c + 1) % images.length);
 
-  // Autoplay
+  /** autoplay com pausas em hover/visibilidade/reduced-motion */
   useEffect(() => {
-    if (paused) return;
-    const id = setInterval(() => setCurrent((c) => (c + 1) % images.length), 4000);
-    return () => clearInterval(id);
-  }, [paused]);
+    if (paused || prefersReduced) return;
+    const tick = () => {
+      timerRef.current = window.setTimeout(() => {
+        setCurrent((c) => (c + 1) % images.length);
+        tick();
+      }, 4000);
+    };
+    tick();
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    };
+  }, [paused, prefersReduced]);
 
-  // Teclado
+  /** teclado + visibilidade */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") prevSlide();
       if (e.key === "ArrowRight") nextSlide();
     };
+    const onVisibility = () => setPaused(document.hidden);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
-  // Swipe
+  /** swipe */
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0]?.clientX ?? null;
+    setPaused(true);
   };
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current == null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(dx) > 30) {
-      if (dx > 0) prevSlide();
-      else nextSlide();
-    }
+    const start = touchStartX.current;
+    setPaused(false);
     touchStartX.current = null;
+    if (start == null) return;
+    const dx = e.changedTouches[0].clientX - start;
+    if (Math.abs(dx) > 30) (dx > 0 ? prevSlide() : nextSlide());
   };
 
   return (
@@ -65,7 +92,7 @@ export default function Hero() {
         <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between">
           <div className="font-serif text-lg">Coroas &amp; Homenagens</div>
 
-          <nav className="hidden md:flex gap-6 text-sm">
+          <nav className="hidden md:flex gap-6 text-sm" aria-label="Navegação principal">
             <a href="#about" className="hover:text-black">Sobre</a>
             <a href="#catalogo" className="hover:text-black">Coroas</a>
             <a href="#depoimentos" className="hover:text-black">Depoimentos</a>
@@ -78,9 +105,9 @@ export default function Hero() {
             <a
               href={telHref}
               className="font-semibold hover:underline"
-              aria-label="Ligar para +55 41 99999-9999"
+              aria-label="Ligar para +55 41 99904-3865"
             >
-              +55 (41) 99999-9999
+              +55 (41) 99904-3865
             </a>
           </div>
         </div>
@@ -90,21 +117,24 @@ export default function Hero() {
       <div className="mx-auto max-w-7xl px-4 py-14 md:py-20 grid md:grid-cols-2 gap-10 items-center">
         {/* Texto */}
         <div>
-          <p className="italic text-sm mb-2">Coroas de Flores</p>
-          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-light leading-tight">
+          <p className="italic text-sm mb-3 text-[#7D7875]">Coroas de Flores</p>
+
+          <h1 className="font-serif text-[40px] md:text-[56px] lg:text-[64px] font-light leading-[1.08] tracking-[-0.01em] max-w-[14ch]">
             Entrega de coroas no <span className="font-semibold">mesmo dia</span>
           </h1>
-          <p className="mt-4 text-lg text-[#7D7875]">
-            Elegância e respeito em cada detalhe. Atendemos <strong>Curitiba e região</strong>. Faixa personalizada (+R$ 25, até 40 caracteres).
+
+          <p className="mt-5 text-base md:text-lg text-[#6C6764] max-w-[56ch]">
+            Homenagens com respeito e pontualidade. Atendemos <strong>Curitiba e região</strong>.
+            <span className="ml-1 font-medium text-[#2E4A3B]">
+              Entrega em até 3h após confirmação.
+            </span>{" "}
+            Faixa personalizada (+R$ 25, até 40 caracteres).
           </p>
 
           {/* Chips de confiança */}
-          <ul className="mt-5 flex flex-wrap gap-2 text-sm">
+          <ul className="mt-6 flex flex-wrap gap-2 text-sm">
             <li className="inline-flex items-center gap-2 rounded-full border border-[#E9E3DB] bg-white px-3 py-1">
-              <Truck className="h-4 w-4" aria-hidden /> Entrega hoje
-            </li>
-            <li className="inline-flex items-center gap-2 rounded-full border border-[#E9E3DB] bg-white px-3 py-1">
-              <Zap className="h-4 w-4" aria-hidden /> PIX imediato
+              <Truck className="h-4 w-4" aria-hidden /> Entrega em até 3h
             </li>
             <li className="inline-flex items-center gap-2 rounded-full border border-[#E9E3DB] bg-white px-3 py-1">
               <Clock className="h-4 w-4" aria-hidden /> Atendimento 24h
@@ -118,18 +148,18 @@ export default function Hero() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Abrir WhatsApp para fazer pedido"
-              className="h-12 px-5 inline-flex items-center gap-2 rounded-md bg-[#2E4A3B] hover:bg-[#315F4F] text-white"
+              className="h-12 px-5 inline-flex items-center justify-center gap-2 rounded-md bg-[#2E4A3B] hover:bg-[#315F4F] text-white shadow-sm w-full sm:w-auto"
               onMouseEnter={() => setPaused(true)}
               onMouseLeave={() => setPaused(false)}
             >
               <MessageCircle className="h-4 w-4" />
-              Pedir pelo WhatsApp
+              Pedir no WhatsApp <span className="opacity-80">(resposta imediata)</span>
             </a>
 
             <a
               href={telHref}
               aria-label="Ligar agora"
-              className="h-12 px-5 inline-flex items-center gap-2 rounded-md border-2"
+              className="h-12 px-5 inline-flex items-center justify-center gap-2 rounded-md border-2 border-[#D9D4CC] hover:border-[#C9C3BA] w-full sm:w-auto"
             >
               <Phone className="h-4 w-4" />
               Ligar agora
@@ -137,7 +167,7 @@ export default function Hero() {
 
             <a
               href={verModelosHref}
-              className="h-12 px-5 inline-flex items-center gap-2 rounded-md underline underline-offset-4 hover:no-underline"
+              className="h-12 px-5 inline-flex items-center justify-center gap-2 rounded-md underline underline-offset-4 hover:no-underline w-full sm:w-auto"
               aria-label="Ver modelos de coroas"
             >
               Ver modelos
@@ -147,32 +177,43 @@ export default function Hero() {
 
         {/* Carrossel de Imagens */}
         <div
-          className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.06)]"
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Galeria de coroas"
+          className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,0.10)] bg-white"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          <Image
-            src={images[current]}
-            alt={`Coroa de flores – imagem ${current + 1} de ${images.length}`}
-            fill
-            className="object-cover"
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            priority
-          />
+          {/* crossfade entre imagens */}
+          <div className="absolute inset-0">
+            {images.map((src, i) => (
+              <Image
+                key={src}
+                src={src}
+                alt={`Coroa de flores real – foto ${i + 1}`}
+                fill
+                sizes="(min-width:1024px) 40vw, 100vw"
+                className={`object-cover transition-opacity duration-700 ${
+                  i === current ? "opacity-100" : "opacity-0"
+                }`}
+                priority={i === 0}
+              />
+            ))}
+          </div>
 
           {/* Controles */}
           <button
             onClick={prevSlide}
-            className="absolute top-1/2 left-3 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow"
+            className="absolute top-1/2 left-2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 sm:p-3 shadow ring-1 ring-black/5"
             aria-label="Imagem anterior"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={nextSlide}
-            className="absolute top-1/2 right-3 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow"
+            className="absolute top-1/2 right-2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 sm:p-3 shadow ring-1 ring-black/5"
             aria-label="Próxima imagem"
           >
             <ChevronRight className="h-5 w-5" />
@@ -184,7 +225,9 @@ export default function Hero() {
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`h-2 w-2 rounded-full ${i === current ? "bg-[#2E4A3B]" : "bg-white/60"}`}
+                className={`h-2.5 w-2.5 rounded-full outline-offset-2 ${
+                  i === current ? "bg-[#2E4A3B]" : "bg-white/80 ring-1 ring-black/10"
+                }`}
                 aria-label={`Ir para imagem ${i + 1}`}
                 aria-pressed={i === current}
               />

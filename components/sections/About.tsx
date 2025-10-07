@@ -66,7 +66,7 @@ export default function About() {
             {/* Mini-box de destaque + CTA */}
             <div className="mt-8 rounded-xl border bg-white p-5">
               <div className="font-semibold text-[#5E5A57]">
-                Coroas a partir de R$ 249,90
+                Coroas a partir de R$ 179,90
               </div>
               <p className="text-sm text-[#7D7875] mt-1">
                 Fale pelo WhatsApp para confirmação rápida de <em>modelo</em>, <em>faixa</em> e{" "}
