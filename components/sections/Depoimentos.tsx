@@ -9,32 +9,39 @@ type Testimonial = {
   nome: string;
   cidade?: string;
   texto: string;
-  avatar?: string; // opcional
+  avatar?: string; // manter opcional, mas não usar para forçar avatar padrão
 };
 
 const ITEMS: Testimonial[] = [
-  {
-    nome: "Karin Peterson",
-    cidade: "Curitiba",
-    texto:
-      "As coroas de flores são elegantes, delicadas e chegam sempre no horário. O atendimento também é ótimo.",
-    avatar: "/coroa_1.png",
-  },
-  {
-    nome: "Marcos Andrade",
-    cidade: "São José dos Pinhais",
-    texto:
-      "Precisávamos de urgência e foram impecáveis. A faixa personalizada ficou perfeita. Recomendo.",
-    // avatar ausente -> usa ícone padrão
-  },
-  {
-    nome: "Ana Luiza",
-    cidade: "Colombo",
-    texto:
-      "Atendimento humano em um momento difícil. Entrega rápida e coroa muito bonita, exatamente como combinado.",
-    avatar: "/avatar-3.jpg",
-  },
+  { nome: "Karin Peterson", cidade: "Curitiba (Centro)", texto: "Atendimento ágil e respeitoso. A coroa chegou no horário e a faixa ficou exatamente como pedi." },
+  { nome: "Marcos Andrade", cidade: "São José dos Pinhais", texto: "Precisávamos com urgência e deu tudo certo. Processo simples no WhatsApp e entrega rápida." },
+  { nome: "Ana Luiza", cidade: "Colombo", texto: "Em um momento difícil, foram muito atenciosos. A coroa estava linda e a mensagem veio certinha." },
+
+  // Curitiba — novos depoimentos
+  { nome: "Paula R.", cidade: "Curitiba (Batel)", texto: "Muito cuidadosos. A coroa ficou elegante e chegou antes da cerimônia." },
+  { nome: "Felipe S.", cidade: "Curitiba (Água Verde)", texto: "Preço justo e comunicação clara. Recomendo sem medo." },
+  { nome: "Camila M.", cidade: "Curitiba (Bacacheri)", texto: "A faixa personalizada ficou impecável. Entrega no horário, sem imprevistos." },
+  { nome: "Leonardo T.", cidade: "Curitiba (Boa Vista)", texto: "Foram sensíveis e rápidos. Deu tudo certo no envio para a capela." },
+  { nome: "Simone A.", cidade: "Curitiba (Jardim das Américas)", texto: "Atendimento humano, tiraram minhas dúvidas e cuidaram de tudo com carinho." },
+  { nome: "Ricardo P.", cidade: "Curitiba (Santa Cândida)", texto: "Chegou no prazo combinado e a qualidade surpreendeu." },
+  { nome: "Natália G.", cidade: "Curitiba (Portão)", texto: "Processo simples, pagamento fácil e mensagem ficou do jeito que pedi." },
+  { nome: "Juliana K.", cidade: "Curitiba (Centro Cívico)", texto: "Organização e respeito. A coroa estava linda." },
+  { nome: "Bruno H.", cidade: "Curitiba (Rebouças)", texto: "Atendimento rápido pelo WhatsApp e entrega pontual." },
+  { nome: "Roberta F.", cidade: "Curitiba (Cabral)", texto: "Capricho nos detalhes e ótimo custo-benefício." },
+  { nome: "Daniel V.", cidade: "Curitiba (Hauer)", texto: "Chegou dentro do período prometido e a montagem estava perfeita." },
+  { nome: "Mariana L.", cidade: "Curitiba (Boqueirão)", texto: "Foram muito solícitos e ajustaram a frase como queríamos." },
+  { nome: "Thiago C.", cidade: "Curitiba (Cristo Rei)", texto: "Tudo conforme combinado; recomendo pela agilidade e respeito." },
+  { nome: "Fernanda B.", cidade: "Curitiba (Seminário)", texto: "Atendimento atencioso e flores de ótima qualidade." },
+  { nome: "Gustavo M.", cidade: "Curitiba (Santa Felicidade)", texto: "Entrega rápida direto na igreja; serviço impecável." },
+  { nome: "Patrícia D.", cidade: "Curitiba (Mercês)", texto: "Ajudaram com a frase e ficou muito bonita. Obrigada pelo cuidado." },
+  { nome: "Eduardo J.", cidade: "Curitiba (Ahú)", texto: "Facilidade no pedido e comprometimento com o horário." },
+
+  // Região metropolitana (extras curtos)
+  { nome: "Rafaela N.", cidade: "Pinhais", texto: "Pontuais e cuidadosos, recomendo." },
+  { nome: "Sueli F.", cidade: "Araucária", texto: "Equipe atenciosa e resultado muito bonito." },
+  { nome: "Rogério P.", cidade: "Campo Largo", texto: "Entrega no local certinho e coroa caprichada." }
 ];
+
 
 export default function Depoimentos() {
   const [idx, setIdx] = useState(0);
@@ -49,15 +56,22 @@ export default function Depoimentos() {
       <div className="mx-auto max-w-4xl px-4 py-16 text-center relative">
         {/* Título */}
         <p className="italic text-sm mb-2">Depoimentos</p>
-        <h2 className="font-serif text-3xl md:text-4xl font-light">O que dizem sobre nós</h2>
+        <h2 className="font-serif text-3xl md:text-4xl font-light">
+          O que dizem sobre nós
+        </h2>
         <div className="mx-auto mt-3 mb-6 h-px w-12 bg-[#E9E3DB]" />
         <p className="text-sm text-[#7D7875] mb-8">
           Ficamos felizes em poder ajudar tantas pessoas.
         </p>
 
-        <AvatarCircle src={t.avatar} alt={t.nome} />
+        <AvatarCircle alt={t.nome} />
 
-        <div className="font-medium">{t.nome}</div>
+        <div className="font-medium">
+          {t.nome}
+          {t.cidade ? (
+            <span className="text-[#7D7875]"> • {t.cidade}</span>
+          ) : null}
+        </div>
 
         <blockquote className="mx-auto mt-4 max-w-2xl px-2 text-[18px] md:text-[20px] italic leading-relaxed text-[#6E6966]">
           “{t.texto}”
@@ -97,9 +111,9 @@ export default function Depoimentos() {
   );
 }
 
-/** Avatar com fallback para ícone moderno quando não houver/falhar a imagem. */
+/** Avatar fixo com fallback para ícone padrão (não passa src para garantir o ícone). */
 function AvatarCircle({ src, alt }: { src?: string; alt: string }) {
-  const [useImg, setUseImg] = useState(Boolean(src));
+  const useImg = Boolean(src); // ficará falso por padrão
 
   return (
     <div className="mx-auto mb-6 inline-block relative">
@@ -109,14 +123,7 @@ function AvatarCircle({ src, alt }: { src?: string; alt: string }) {
       <span className="absolute inset-0 rounded-full border-2 border-[#E9E3DB] translate-x-1 translate-y-1" />
       <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-white shadow-sm grid place-items-center bg-white">
         {useImg && src ? (
-          <Image
-            src={src}
-            alt={alt}
-            fill
-            className="object-cover"
-            onError={() => setUseImg(false)} // fallback se 404 ou inválida
-            priority
-          />
+          <Image src={src} alt={alt} fill className="object-cover" priority />
         ) : (
           <UserRound className="h-10 w-10 text-[#8B867F]" aria-hidden />
         )}

@@ -12,7 +12,7 @@ import {
   Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { WHATS_NUMBER } from "@/lib/constants";
+import { WHATS_NUMBER, PHONE_NUMBER_ALT } from "@/lib/constants";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -22,6 +22,7 @@ export default function Footer() {
     "Olá! Preciso de ajuda para fazer um pedido de coroa de flores."
   )}`;
   const telHref = telHrefFromWhats(WHATS_NUMBER);
+  const telHrefAlt = telHrefFromWhats(PHONE_NUMBER_ALT);
 
   return (
     <footer className="bg-[#FAF8F5] text-[#5E5A57] border-t">
@@ -38,21 +39,31 @@ export default function Footer() {
           </div>
 
           <div className="flex gap-2">
-            <Button asChild className="bg-white text-[#2E4A3B] hover:bg-white/90">
+            {/* WhatsApp (preenchido) */}
+            <Button
+              asChild
+              className="bg-white text-[#2E4A3B] hover:bg-white/90 h-10 px-4 rounded-xl"
+            >
               <a
                 href={waLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Chamar no WhatsApp"
+                className="inline-flex items-center gap-2"
               >
-                <MessageCircle className="mr-2 h-4 w-4" />
-                Falar no WhatsApp
+                <MessageCircle className="h-4 w-4" />
+                <span>Falar no WhatsApp</span>
               </a>
             </Button>
-            <Button asChild variant="outline" className="border-white text-white hover:bg-white/10">
-              <a href={telHref} aria-label="Ligar agora">
-                <Phone className="mr-2 h-4 w-4" />
-                Ligar agora
+
+            {/* Ligar agora (ghost/outline custom) */}
+            <Button
+              asChild
+              className="h-10 px-4 rounded-xl border border-white/80 text-white hover:bg-white/10 bg-transparent"
+            >
+              <a href={telHref} aria-label="Ligar agora" className="inline-flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                <span>Ligar agora</span>
               </a>
             </Button>
           </div>
@@ -85,13 +96,30 @@ export default function Footer() {
                   WhatsApp: {formatWhats(WHATS_NUMBER)}
                 </a>
               </li>
+
+              {/* Telefone 1 (principal) */}
+              <li className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                <a href={telHref} className="hover:underline">
+                  Telefone: {formatWhats(WHATS_NUMBER)}
+                </a>
+              </li>
+
+              {/* Telefone 2 (alternativo) */}
+              <li className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                <a href={telHrefAlt} className="hover:underline">
+                  Telefone 2: {formatWhats(PHONE_NUMBER_ALT)}
+                </a>
+              </li>
+
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
                 <a
-                  href="mailto:contato@coroashomenagens.com.br"
+                  href="mailto:floriculturalarissa@hotmail.com"
                   className="hover:underline"
                 >
-                  contato@coroashomenagens.com.br
+                  floriculturalarissa@hotmail.com
                 </a>
               </li>
               <li className="flex items-center gap-2">
@@ -150,11 +178,6 @@ export default function Footer() {
                   Termos de Uso
                 </Link>
               </li>
-              <li>
-                <Link href="/sitemap.xml" className="hover:underline">
-                  Sitemap
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -200,10 +223,6 @@ export default function Footer() {
             <Link href="/termos" className="hover:underline">
               Termos de Uso
             </Link>
-            <span className="opacity-40">•</span>
-            <Link href="/sitemap.xml" className="hover:underline">
-              Sitemap
-            </Link>
           </div>
         </div>
       </div>
@@ -228,8 +247,8 @@ function formatWhats(num: string) {
   }
 }
 
-/** Converte o número do WhatsApp em um href tel: */
-function telHrefFromWhats(num: string) {
+/** Converte o número (Whats/telefone) em um href tel: */
+function telHrefFromWhats(num?: string) {
   const only = (num || "").toString().replace(/\D/g, "");
   return only ? `tel:+${only}` : "tel:";
 }

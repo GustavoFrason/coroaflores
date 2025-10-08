@@ -11,6 +11,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 import { PRODUTOS } from "@/lib/models";
 import { formatCurrency, precoAtual } from "@/lib/utils";
@@ -21,10 +31,21 @@ declare global {
   }
 }
 
+type SortKey = "relevancia" | "preco_asc" | "preco_desc";
+
 export default function Catalogo() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
   const produtos = useMemo(() => (Array.isArray(PRODUTOS) ? PRODUTOS : []), []);
+  const cores = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          produtos.flatMap((p) => (Array.isArray(p.coresSugeridas) ? p.coresSugeridas : []))
+        )
+      ),
+    [produtos]
+  );
 
   // log dev
   if (process.env.NODE_ENV !== "production") {
@@ -39,7 +60,7 @@ export default function Catalogo() {
         "@type": "Product",
         name: p.nome,
         image: siteUrl ? `${siteUrl}${p.img}` : p.img,
-        brand: "Floricultura Larissa",
+        brand: "Coroas & Homenagens",
         offers: {
           "@type": "Offer",
           priceCurrency: "BRL",
@@ -52,25 +73,190 @@ export default function Catalogo() {
     return { "@context": "https://schema.org", "@graph": graph };
   }, [siteUrl, produtos]);
 
+  // ---------------- Filtros ----------------
+  const [q, setQ] = useState("");
+  const [cor, setCor] = useState<string>("todas");
+  const [onlyPromo, setOnlyPromo] = useState(false);
+  const [precoMin, setPrecoMin] = useState<string>("");
+  const [precoMax, setPrecoMax] = useState<string>("");
+  const [sort, setSort] = useState<SortKey>("relevancia");
+
+  const filtrados = useMemo(() => {
+    const norm = (s: string) =>
+      s
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "");
+
+    const qn = norm(q);
+
+    let arr = [...produtos].filter((p) => {
+      // busca
+      if (q && !norm(p.nome).includes(qn)) return false;
+      // cor
+      if (cor !== "todas") {
+        const coresProd = p.coresSugeridas ?? [];
+        if (!coresProd.includes(cor)) return false;
+      }
+      // promo
+      if (onlyPromo) {
+        const { emPromocao } = precoAtual(p);
+        if (!emPromocao) return false;
+      }
+      // faixa de preço
+      const { valor } = precoAtual(p);
+      const min = precoMin ? Number(precoMin) : undefined;
+      const max = precoMax ? Number(precoMax) : undefined;
+      if (min !== undefined && valor < min) return false;
+      if (max !== undefined && valor > max) return false;
+
+      return true;
+    });
+
+    // ordenação
+    arr.sort((a, b) => {
+      if (sort === "preco_asc") return precoAtual(a).valor - precoAtual(b).valor;
+      if (sort === "preco_desc") return precoAtual(b).valor - precoAtual(a).valor;
+      return 0; // relevância: mantém ordem original (curadoria)
+    });
+
+    return arr;
+  }, [q, cor, onlyPromo, precoMin, precoMax, sort, produtos]);
+
+  const total = filtrados.length;
+
+  const limparFiltros = () => {
+    setQ("");
+    setCor("todas");
+    setOnlyPromo(false);
+    setPrecoMin("");
+    setPrecoMax("");
+    setSort("relevancia");
+  };
+
   return (
     <section id="catalogo" className="relative overflow-hidden bg-[#FAF8F5] text-[#5E5A57]">
       <div className="mx-auto max-w-[1400px] px-4 md:px-6 py-12">
-        <div className="flex items-end justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-serif">Coroas de Flores</h2>
-          <p className="hidden sm:block text-sm text-[#7D7875]">
-            {produtos.length > 0 ? `Temos ${produtos.length} opção(ões)` : "Catálogo em atualização"}
-          </p>
+        <div className="flex flex-col gap-4 sm:gap-3">
+          <div className="flex items-end justify-between">
+            <h2 className="text-2xl md:text-3xl font-serif">Coroas de Flores</h2>
+            <p className="hidden sm:block text-sm text-[#7D7875]">
+              {produtos.length > 0 ? `Temos ${produtos.length} opção(ões)` : "Catálogo em atualização"}
+            </p>
+          </div>
+
+          {/* Barra de filtros */}
+          <div className="rounded-2xl border border-[#E9E3DB] bg-white p-3 sm:p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+              {/* Busca */}
+              <div className="lg:col-span-2">
+                <Label htmlFor="q" className="text-xs text-[#7D7875]">
+                  Buscar
+                </Label>
+                <Input
+                  id="q"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Ex.: Luxo, Clássica, Rosas…"
+                  className="mt-1 bg-white"
+                />
+              </div>
+
+              {/* Cor sugerida */}
+              <div>
+                <Label className="text-xs text-[#7D7875]">Cor</Label>
+                <Select value={cor} onValueChange={setCor}>
+                  <SelectTrigger className="mt-1 bg-white">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    {cores.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Preço mín/máx */}
+              <div>
+                <Label htmlFor="precoMin" className="text-xs text-[#7D7875]">
+                  Preço mín (R$)
+                </Label>
+                <Input
+                  id="precoMin"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={precoMin}
+                  onChange={(e) => setPrecoMin(e.target.value.replace(/\D/g, ""))}
+                  className="mt-1 bg-white"
+                />
+              </div>
+              <div>
+                <Label htmlFor="precoMax" className="text-xs text-[#7D7875]">
+                  Preço máx (R$)
+                </Label>
+                <Input
+                  id="precoMax"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={precoMax}
+                  onChange={(e) => setPrecoMax(e.target.value.replace(/\D/g, ""))}
+                  className="mt-1 bg-white"
+                />
+              </div>
+
+              {/* Ordenação */}
+              <div>
+                <Label className="text-xs text-[#7D7875]">Ordenar por</Label>
+                <Select value={sort} onValueChange={(v: SortKey) => setSort(v)}>
+                  <SelectTrigger className="mt-1 bg-white">
+                    <SelectValue placeholder="Relevância" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="relevancia">Relevância</SelectItem>
+                    <SelectItem value="preco_asc">Preço: menor → maior</SelectItem>
+                    <SelectItem value="preco_desc">Preço: maior → menor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Linha de controle secundário */}
+            <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
+              <label className="inline-flex items-center gap-2 text-sm text-[#5E5A57]">
+               {/* <Checkbox checked={onlyPromo} onCheckedChange={(v) => setOnlyPromo(Boolean(v))} /> */}
+                {/* Mostrar apenas promoções */}
+              </label>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-[#7D7875]">
+                  {total} resultado{total === 1 ? "" : "s"}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={limparFiltros}
+                  className="h-9 rounded-xl border-[#E9E3DB] text-[#5E5A57] hover:bg-[#FAF8F5]"
+                >
+                  Limpar filtros
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {produtos.length === 0 ? (
-          <div className="rounded-2xl border border-[#E9E3DB] bg-white p-6">
+        {/* Grade */}
+        {filtrados.length === 0 ? (
+          <div className="rounded-2xl border border-[#E9E3DB] bg-white p-6 mt-6">
             <p className="text-sm text-[#7D7875]">
-              Nenhum produto carregado. Confira o import e o alias do path.
+              Nenhum produto encontrado com os filtros selecionados.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6 xl:gap-7">
-            {produtos.map((p, idx) => (
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6 xl:gap-7">
+            {filtrados.map((p, idx) => (
               <CatalogCard key={p.id} produtoIndex={idx} {...p} />
             ))}
           </div>
@@ -116,7 +302,6 @@ function CatalogCard({
     badge,
   });
 
-  // Handler robusto para mobile: muda o hash, faz scroll e dispara hashchange
   const handlePersonalizar = () => {
     try {
       if (typeof window === "undefined") return;
@@ -133,7 +318,6 @@ function CatalogCard({
 
       window.dispatchEvent(new HashChangeEvent("hashchange"));
     } catch {
-      // fallback
       window.location.href = `/#pedido-rapido?pid=${encodeURIComponent(id)}${
         cor ? `&cor=${encodeURIComponent(cor)}` : ""
       }&utm=cat_card_${id}`;

@@ -3,7 +3,7 @@ import { PenLine, BadgeCheck, Clock, Truck } from "lucide-react";
 const steps = [
   { icon: PenLine, title: "Escolha e personalize", desc: "Selecione o modelo e escreva a faixa." },
   { icon: BadgeCheck, title: "Confirmação rápida", desc: "Validamos tudo pelo WhatsApp." },
-  { icon: Clock, title: "Atendimento 24h", desc: "Pedidos confirmados até 15h: entrega hoje." },
+  { icon: Clock, title: "Atendimento 24h", desc: "Pedidos entregue em no máximo 3 horas." },
   { icon: Truck, title: "Entrega coordenada", desc: "Falamos com a capela e entregamos no local." },
 ];
 

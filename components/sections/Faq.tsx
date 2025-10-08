@@ -24,14 +24,6 @@ const QA = [
     a: "Nome completo do(a) homenageado(a), local (capela/cemitério/hospital), sala e horário. Se não tiver tudo agora, podemos confirmar com você no WhatsApp.",
   },
   {
-    q: "Quais são os tamanhos das coroas?",
-    a: "Trabalhamos com P (45–55cm), M (60–70cm) e G (80–90cm) de diâmetro aproximado. O volume de flores varia conforme o modelo.",
-  },
-  {
-    q: "Posso escolher as cores das flores?",
-    a: "Claro. Temos opções clássicas (branco/verde) e combinações com toques de rosa, amarelo e lilás. Podemos adaptar conforme a disponibilidade do dia.",
-  },
-  {
     q: "Quais as formas de pagamento?",
     a: "PIX (compensa na hora), cartão de crédito/débito e link de pagamento. Assim que confirmado, já encaminhamos para produção e logística.",
   },

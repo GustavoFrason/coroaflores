@@ -31,8 +31,7 @@ export default function CutoffBanner({ cutoffHour = 15 }: { cutoffHour?: number 
         );
       } else {
         setMsg(
-          "Pedidos confirmados após o horário-limite são entregues no próximo período. " +
-            "Entrega em até 3h após a confirmação."
+          "Pedidos são entregues em até 3h após a confirmação."
         );
       }
     };

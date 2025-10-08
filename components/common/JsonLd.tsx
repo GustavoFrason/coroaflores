@@ -8,7 +8,7 @@ export default function JsonLd() {
     name: "Coroas & Homenagens",
     url: base,
     logo: `${base}/favicon.ico`,
-    contactPoint: [{ "@type": "ContactPoint", telephone: "+55-41-99999-9999", contactType: "customer service", areaServed: "BR" }],
+    contactPoint: [{ "@type": "ContactPoint", telephone: "+55-41-99904-3865", contactType: "customer service", areaServed: "BR" }],
   };
   const website = { "@context": "https://schema.org", "@type": "WebSite", url: base, name: "Coroas & Homenagens" };
   return (

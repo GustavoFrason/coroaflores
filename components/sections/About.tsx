@@ -24,7 +24,7 @@ export default function About() {
             <div className="absolute inset-0 rounded-[28px] md:rounded-[36px] border-[6px] border-[#E9E3DB] pointer-events-none" />
             <div className="relative rounded-[24px] md:rounded-[32px] overflow-hidden shadow-sm">
               <Image
-                src="/coroa_1.png"
+                src="/sobre.png"
                 alt="Profissional preparando uma coroa de flores"
                 width={1120}
                 height={1400}

@@ -16,7 +16,7 @@ function JsonLd() {
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: "+55-41-99999-9999",
+        telephone: "+55-41-99904-3865",
         contactType: "customer service",
         areaServed: "BR",
       },
