@@ -2,15 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import {
-  MessageCircle,
-  Phone,
-  Truck,
-  Zap,
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { MessageCircle, Phone, Truck, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
  * Coloque as imagens editadas em /public

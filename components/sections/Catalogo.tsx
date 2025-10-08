@@ -19,7 +19,6 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 import { PRODUTOS } from "@/lib/models";
@@ -90,7 +89,7 @@ export default function Catalogo() {
 
     const qn = norm(q);
 
-    let arr = [...produtos].filter((p) => {
+    const arr = [...produtos].filter((p) => {
       // busca
       if (q && !norm(p.nome).includes(qn)) return false;
       // cor

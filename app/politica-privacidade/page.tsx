@@ -61,10 +61,10 @@ export default function PoliticaPrivacidadePage() {
             Você pode solicitar a atualização, exclusão ou correção de seus dados pessoais
             a qualquer momento pelo e-mail{" "}
             <a
-              href="mailto:contato@coroashomenagens.com.br"
+              href="mailto:floriculturalarissa@hotmail.com"
               className="text-[#2E4A3B] hover:underline"
             >
-              contato@coroashomenagens.com.br
+              floriculturalarissa@hotmail.com
             </a>
             .
           </p>
