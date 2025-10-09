@@ -1,7 +1,7 @@
 import Script from "next/script";
 
 export default function JsonLd() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coroaflores.vercel.app";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.coroaflores24hrs.com.br";
   const org = {
     "@context": "https://schema.org",
     "@type": "Organization",

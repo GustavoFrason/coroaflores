@@ -6,7 +6,7 @@ import { Analytics } from "@vercel/analytics/react";
 
 // JSON-LD básico (Organization + Website)
 function JsonLd() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coroaflores.vercel.app";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.coroaflores24hrs.com.br";
   const org = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -45,7 +45,7 @@ function JsonLd() {
   );
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coroaflores.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.coroaflores24hrs.com.br";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
