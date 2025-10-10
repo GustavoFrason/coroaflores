@@ -3,6 +3,7 @@ import "./globals.css";
 
 // Opcional: Vercel Analytics
 import { Analytics } from "@vercel/analytics/react";
+import Script from "next/script"; // 👈 GA4
 
 // JSON-LD básico (Organization + Website)
 function JsonLd() {
@@ -101,6 +102,21 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
+      <head>
+        {/* Google Analytics 4 */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-WZPC41JTHE"
+        />
+        <Script id="ga4-script" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-WZPC41JTHE');
+          `}
+        </Script>
+      </head>
       <body className="bg-[#FAF8F5] text-[#5E5A57] antialiased">
         <JsonLd />
         {children}
