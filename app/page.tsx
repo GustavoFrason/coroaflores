@@ -1,3 +1,4 @@
+// app/page.tsx
 import CutoffBanner from "@/components/common/CutoffBanner";
 import Hero from "@/components/sections/Hero";
 import QuickOrder from "@/components/sections/QuickOrder";
@@ -11,31 +12,30 @@ import Footer from "@/components/sections/Footer";
 import WhatsFloatingButton from "@/components/common/WhatsFloatingButton";
 import { JsonLd } from "@/components/JsonLd";
 
+const BASE = "https://www.coroaflores24hrs.com.br";
+
 export default function Page() {
-  // 🔹 Dados estruturados para SEO local
+  // JSON-LD principal (SEO local) — com NAP real e vínculo com a Organization (#org)
   const business = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": "Florist",
+    "@id": `${BASE}#lb-home`,
     name: "Floricultura Larissa – Coroas de Flores 24h Curitiba",
-    url: "https://www.coroaflores24hrs.com.br",
-    image: "https://www.coroaflores24hrs.com.br/og-image.jpg",
-    logo: "https://www.coroaflores24hrs.com.br/favicon.ico",
+    url: BASE,
+    image: `${BASE}/og-image.jpg`,
+    logo: `${BASE}/favicon.ico`,
     telephone: "+55-41-99904-3865",
     priceRange: "R$",
     description:
       "Floricultura em Curitiba especializada em coroas de flores com entrega imediata. Atendimento 24 horas, inclusive finais de semana e feriados.",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "Rua Exemplo, 123",
+      streetAddress:
+        "Rua Waldemar Loureiro Campos, 2940 (Em frente ao Cemitério, Boqueirão)",
       addressLocality: "Curitiba",
       addressRegion: "PR",
-      postalCode: "80000-000",
+      postalCode: "81670-360",
       addressCountry: "BR",
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: -25.4284,
-      longitude: -49.2733,
     },
     openingHoursSpecification: [
       {
@@ -53,21 +53,57 @@ export default function Page() {
         closes: "23:59",
       },
     ],
-    areaServed: [
-      { "@type": "City", name: "Curitiba" },
-      { "@type": "City", name: "São José dos Pinhais" },
-      { "@type": "City", name: "Colombo" },
-    ],
+    areaServed: ["Curitiba", "São José dos Pinhais", "Colombo", "Boqueirão", "PR"],
     sameAs: [
-      "https://instagram.com/SEU_PERFIL",
-      "https://facebook.com/SEU_PERFIL",
+      // adicione somente se forem reais (senão remova este array):
+      // "https://instagram.com/SEU_PERFIL",
+      // "https://facebook.com/SEU_PERFIL",
     ],
+    parentOrganization: { "@id": `${BASE}#org` },
+    // Opcional (quando tiver o link exato do Maps):
+    // hasMap: "https://maps.google.com/?q=Rua+Waldemar+Loureiro+Campos,+2940,+Curitiba,+PR",
+    // Opcional (se tiver as coordenadas exatas do nº 2940):
+    // geo: { "@type": "GeoCoordinates", latitude: -25.5, longitude: -49.2 },
   };
+
+  // (Opcional) Habilite este bloco somente se o conteúdo do <Faq /> corresponder a estas Q&A:
+  // const faq = {
+  //   "@context": "https://schema.org",
+  //   "@type": "FAQPage",
+  //   mainEntity: [
+  //     {
+  //       "@type": "Question",
+  //       name: "Qual o prazo de entrega?",
+  //       acceptedAnswer: {
+  //         "@type": "Answer",
+  //         text: "Em Curitiba e região, a entrega ocorre em até 3 horas após confirmação do pedido.",
+  //       },
+  //     },
+  //     {
+  //       "@type": "Question",
+  //       name: "A faixa é personalizada?",
+  //       acceptedAnswer: {
+  //         "@type": "Answer",
+  //         text: "Sim. Personalizamos a faixa com até 40 caracteres.",
+  //       },
+  //     },
+  //     {
+  //       "@type": "Question",
+  //       name: "Quais formas de pagamento?",
+  //       acceptedAnswer: {
+  //         "@type": "Answer",
+  //         text: "Pix, cartão e link de pagamento. Atendemos 24 horas.",
+  //       },
+  //     },
+  //   ],
+  // };
 
   return (
     <main className="pb-20 md:pb-0">
-      {/* Dados estruturados */}
-      <JsonLd id="ld-local" data={business} />
+      {/* Dados estruturados (SEO local) */}
+      <JsonLd id="ld-local-home" data={business} />
+      {/* Habilite somente se o conteúdo do componente <Faq /> refletir exatamente estas Q&A */}
+      {/* <JsonLd id="ld-faq-home" data={faq} /> */}
 
       {/* Urgência / SLA */}
       <CutoffBanner cutoffHour={15} />
@@ -75,6 +111,7 @@ export default function Page() {
       {/* Acima da dobra */}
       <Hero />
 
+      {/* Como funciona */}
       <ComoFunciona />
 
       {/* Conteúdo */}
@@ -93,7 +130,7 @@ export default function Page() {
       <CtaFinal />
       <Footer />
 
-      {/* Ação rápida */}
+      {/* Ação rápida (flutuante) */}
       <WhatsFloatingButton />
     </main>
   );

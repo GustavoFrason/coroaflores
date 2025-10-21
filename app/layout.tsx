@@ -2,19 +2,20 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/react";
-import Script from "next/script"; // GA4
+import Script from "next/script";
+// Se preferir usar o componente separado que você criou, pode importar:
+// import { JsonLd } from "@/components/JsonLd";
 
-// JSON-LD básico (Organization + Website)
-function JsonLd() {
-  const base =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.coroaflores24hrs.com.br";
+const SITE_URL = "https://www.coroaflores24hrs.com.br";
 
+/** JSON-LD com @graph (Organization + WebSite) e @id estáveis */
+function BaseJsonLd() {
   const org = {
-    "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${SITE_URL}#org`,
     name: "Floricultura Larissa",
-    url: base,
-    logo: `${base}/favicon.ico`,
+    url: SITE_URL,
+    logo: `${SITE_URL}/favicon.ico`,
     contactPoint: [
       {
         "@type": "ContactPoint",
@@ -30,35 +31,28 @@ function JsonLd() {
   };
 
   const website = {
-    "@context": "https://schema.org",
     "@type": "WebSite",
-    url: base,
+    "@id": `${SITE_URL}#website`,
+    url: SITE_URL,
     name: "Floricultura Larissa",
+    publisher: { "@id": `${SITE_URL}#org` },
     potentialAction: {
       "@type": "SearchAction",
-      target: `${base}/?q={search_term_string}`,
+      target: `${SITE_URL}/?q={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   };
 
+  const graph = { "@context": "https://schema.org", "@graph": [org, website] };
+
   return (
-    <>
-      <script
-        id="ld-org"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(org) }}
-      />
-      <script
-        id="ld-website"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }}
-      />
-    </>
+    <script
+      id="ld-base"
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
+    />
   );
 }
-
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.coroaflores24hrs.com.br";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -98,6 +92,14 @@ export const metadata: Metadata = {
     "max-snippet": -1,
     "max-image-preview": "large",
     "max-video-preview": -1,
+    // Se quiser ser explícito com Googlebot:
+    // googleBot: {
+    //   index: true,
+    //   follow: true,
+    //   "max-snippet": -1,
+    //   "max-image-preview": "large",
+    //   "max-video-preview": -1,
+    // },
   },
   icons: {
     icon: [{ url: "/favicon.ico" }],
@@ -108,22 +110,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#FAF8F5",
-  // colorScheme: "light",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
       <head>
         {/* Google Analytics 4 */}
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-WZPC41JTHE"
-        />
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-WZPC41JTHE" />
         <Script id="ga4-script" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
@@ -132,9 +126,11 @@ export default function RootLayout({
             gtag('config', 'G-WZPC41JTHE');
           `}
         </Script>
+
+        {/* JSON-LD base */}
+        <BaseJsonLd />
       </head>
       <body className="bg-[#FAF8F5] text-[#5E5A57] antialiased">
-        <JsonLd />
         {children}
         <Analytics />
       </body>
