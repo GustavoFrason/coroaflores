@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-// Opcional: Vercel Analytics
 import { Analytics } from "@vercel/analytics/react";
-import Script from "next/script"; // 👈 GA4
+import Script from "next/script"; // GA4
 
 // JSON-LD básico (Organization + Website)
 function JsonLd() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.coroaflores24hrs.com.br";
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.coroaflores24hrs.com.br";
+
   const org = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -22,12 +23,22 @@ function JsonLd() {
         areaServed: "BR",
       },
     ],
+    sameAs: [
+      // "https://www.instagram.com/SEU_PERFIL",
+      // "https://www.facebook.com/SEU_PERFIL",
+    ],
   };
+
   const website = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     url: base,
     name: "Floricultura Larissa",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${base}/?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
   };
 
   return (
@@ -46,29 +57,30 @@ function JsonLd() {
   );
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.coroaflores24hrs.com.br";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.coroaflores24hrs.com.br";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Floricultura Larissa",
-    template: "%s | Floricultura Larissa",
+    default: "Coroas de Flores 24h em Curitiba | Floricultura Larissa",
+    template: "%s | Coroas de Flores 24h Curitiba",
   },
   description:
-    "Coroas de flores com faixa personalizada e entrega no mesmo dia. Atendimento 24h pelo WhatsApp.",
-  alternates: { canonical: "/" },
+    "Coroas de flores com faixa personalizada e entrega imediata em Curitiba e região metropolitana. Atendimento 24h pelo WhatsApp.",
+  alternates: { canonical: SITE_URL },
   openGraph: {
-    title: "Coroas de Flores com Entrega no Mesmo Dia | Floricultura Larissa",
+    title: "Coroas de Flores 24h em Curitiba | Floricultura Larissa",
     description:
-      "Coroas de flores com faixa personalizada e entrega no mesmo dia. Atendimento 24h pelo WhatsApp.",
-    url: "/",
+      "Entrega imediata de coroas de flores em Curitiba. Atendimento 24h via WhatsApp.",
+    url: SITE_URL,
     siteName: "Floricultura Larissa",
     images: [
       {
-        url: "/og-image.jpg", // /public/og-image.jpg (1200x630)
+        url: `${SITE_URL}/og-image.jpg`,
         width: 1200,
         height: 630,
-        alt: "Coroa de flores – entrega no mesmo dia",
+        alt: "Coroa de flores – entrega no mesmo dia em Curitiba",
       },
     ],
     locale: "pt_BR",
@@ -76,30 +88,34 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Coroas de Flores com Entrega no Mesmo Dia | Floricultura Larissa",
-    description:
-      "Coroas de flores com faixa personalizada e entrega no mesmo dia. Atendimento 24h pelo WhatsApp.",
-    images: ["/og-image.jpg"],
+    title: "Coroas de Flores 24h em Curitiba",
+    description: "Entrega imediata e atendimento 24h. Peça pelo WhatsApp.",
+    images: [`${SITE_URL}/og-image.jpg`],
   },
   robots: {
     index: true,
     follow: true,
+    "max-snippet": -1,
+    "max-image-preview": "large",
+    "max-video-preview": -1,
   },
   icons: {
     icon: [{ url: "/favicon.ico" }],
-    apple: [{ url: "/apple-touch-icon.png" }], // /public/apple-touch-icon.png (180x180)
+    apple: [{ url: "/apple-touch-icon.png" }],
     shortcut: ["/favicon.ico"],
   },
 };
 
-// ✅ Next 15: themeColor vai no viewport
 export const viewport: Viewport = {
   themeColor: "#FAF8F5",
-  // opcional:
   // colorScheme: "light",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="pt-BR">
       <head>

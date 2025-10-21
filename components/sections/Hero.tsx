@@ -1,20 +1,61 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { MessageCircle, Phone, Truck, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MessageCircle,
+  Phone,
+  Truck,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 /**
  * Coloque as imagens editadas em /public
  * Ex.: /public/coroa_1.webp, /public/coroa_2.webp
  */
-const images: string[] = ["/coroa_1.png", "/coroa_2.png","/coroa_3.png", "/coroa_4.png"];
+const defaultImages: string[] = [
+  "/coroa_1.png",
+  "/coroa_2.png",
+  "/coroa_3.png",
+  "/coroa_4.png",
+];
 
-export default function Hero() {
-  const telHref = "tel:+5541999043865";
+type HeroProps = {
+  title?: string;
+  subtitle?: string;
+  /** Se passado, entra como primeiro slide do carrossel */
+  background?: string;
+  /** Se passado, substitui todos os slides */
+  images?: string[];
+  /** Overrides de CTA */
+  whatsappHrefOverride?: string;
+  telHrefOverride?: string;
+  verModelosHrefOverride?: string;
+};
+
+export default function Hero({
+  title,
+  subtitle,
+  background,
+  images,
+  whatsappHrefOverride,
+  telHrefOverride,
+  verModelosHrefOverride,
+}: HeroProps) {
+  const telHref = telHrefOverride ?? "tel:+5541999043865";
   const waHref =
+    whatsappHrefOverride ??
     "https://wa.me/5541999043865?text=Ol%C3%A1!%20Quero%20fazer%20um%20pedido%20de%20coroa%20de%20flores.";
-  const verModelosHref = "#catalogo";
+  const verModelosHref = verModelosHrefOverride ?? "#catalogo";
+
+  // Slides finais
+  const slides = images?.length
+    ? images
+    : background
+    ? [background, ...defaultImages]
+    : defaultImages;
 
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -29,16 +70,21 @@ export default function Hero() {
     []
   );
 
-  const prevSlide = () =>
-    setCurrent((c) => (c - 1 + images.length) % images.length);
-  const nextSlide = () => setCurrent((c) => (c + 1) % images.length);
+  const prevSlide = useCallback(
+    () => setCurrent((c) => (c - 1 + slides.length) % slides.length),
+    [slides.length]
+  );
+  const nextSlide = useCallback(
+    () => setCurrent((c) => (c + 1) % slides.length),
+    [slides.length]
+  );
 
   /** autoplay com pausas em hover/visibilidade/reduced-motion */
   useEffect(() => {
     if (paused || prefersReduced) return;
     const tick = () => {
       timerRef.current = window.setTimeout(() => {
-        setCurrent((c) => (c + 1) % images.length);
+        setCurrent((c) => (c + 1) % slides.length);
         tick();
       }, 4000);
     };
@@ -46,7 +92,7 @@ export default function Hero() {
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
     };
-  }, [paused, prefersReduced]);
+  }, [paused, prefersReduced, slides.length]);
 
   /** teclado + visibilidade */
   useEffect(() => {
@@ -55,13 +101,14 @@ export default function Hero() {
       if (e.key === "ArrowRight") nextSlide();
     };
     const onVisibility = () => setPaused(document.hidden);
+
     window.addEventListener("keydown", onKey);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.removeEventListener("keydown", onKey);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, []);
+  }, [nextSlide, prevSlide]);
 
   /** swipe */
   const onTouchStart = (e: React.TouchEvent) => {
@@ -74,7 +121,10 @@ export default function Hero() {
     touchStartX.current = null;
     if (start == null) return;
     const dx = e.changedTouches[0].clientX - start;
-    if (Math.abs(dx) > 30) (dx > 0 ? prevSlide() : nextSlide());
+    if (Math.abs(dx) > 30) {
+      if (dx > 0) prevSlide();
+      else nextSlide();
+    }
   };
 
   return (
@@ -84,12 +134,25 @@ export default function Hero() {
         <div className="mx-auto max-w-7xl px-4 py-4 flex items-center justify-between">
           <div className="font-serif text-lg">Coroas &amp; Homenagens</div>
 
-          <nav className="hidden md:flex gap-6 text-sm" aria-label="Navegação principal">
-            <a href="#about" className="hover:text-black">Sobre</a>
-            <a href="#catalogo" className="hover:text-black">Coroas</a>
-            <a href="#depoimentos" className="hover:text-black">Depoimentos</a>
-            <a href="#faq" className="hover:text-black">Dúvidas</a>
-            <a href="#contato" className="hover:text-black">Contato</a>
+          <nav
+            className="hidden md:flex gap-6 text-sm"
+            aria-label="Navegação principal"
+          >
+            <a href="#about" className="hover:text-black">
+              Sobre
+            </a>
+            <a href="#catalogo" className="hover:text-black">
+              Coroas
+            </a>
+            <a href="#depoimentos" className="hover:text-black">
+              Depoimentos
+            </a>
+            <a href="#faq" className="hover:text-black">
+              Dúvidas
+            </a>
+            <a href="#contato" className="hover:text-black">
+              Contato
+            </a>
           </nav>
 
           <div className="text-sm">
@@ -112,15 +175,24 @@ export default function Hero() {
           <p className="italic text-sm mb-3 text-[#7D7875]">Coroas de Flores</p>
 
           <h1 className="font-serif text-[40px] md:text-[56px] lg:text-[64px] font-light leading-[1.08] tracking-[-0.01em] max-w-[14ch]">
-            Entrega de coroas no <span className="font-semibold">mesmo dia</span>
+            {title ?? (
+              <>
+                Entrega de coroas no <span className="font-semibold">mesmo dia</span>
+              </>
+            )}
           </h1>
 
           <p className="mt-5 text-base md:text-lg text-[#6C6764] max-w-[56ch]">
-            Homenagens com respeito e pontualidade. Atendemos <strong>Curitiba e região</strong>.
-            <span className="ml-1 font-medium text-[#2E4A3B]">
-              Entrega em até 3h após confirmação.
-            </span>{" "}
-            Faixa personalizada (+R$ 25, até 40 caracteres).
+            {subtitle ?? (
+              <>
+                Homenagens com respeito e pontualidade. Atendemos{" "}
+                <strong>Curitiba e região</strong>.
+                <span className="ml-1 font-medium text-[#2E4A3B]">
+                  Entrega em até 3h após confirmação.
+                </span>{" "}
+                Faixa personalizada (+R$ 25, até 40 caracteres).
+              </>
+            )}
           </p>
 
           {/* Chips de confiança */}
@@ -145,7 +217,8 @@ export default function Hero() {
               onMouseLeave={() => setPaused(false)}
             >
               <MessageCircle className="h-4 w-4" />
-              Pedir no WhatsApp <span className="opacity-80">(resposta imediata)</span>
+              Pedir no WhatsApp{" "}
+              <span className="opacity-80">(resposta imediata)</span>
             </a>
 
             <a
@@ -178,11 +251,10 @@ export default function Hero() {
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          {/* crossfade entre imagens */}
           <div className="absolute inset-0">
-            {images.map((src, i) => (
+            {slides.map((src, i) => (
               <Image
-                key={src}
+                key={`${src}-${i}`}
                 src={src}
                 alt={`Coroa de flores real – foto ${i + 1}`}
                 fill
@@ -213,12 +285,14 @@ export default function Hero() {
 
           {/* Indicadores */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-            {images.map((_, i) => (
+            {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
                 className={`h-2.5 w-2.5 rounded-full outline-offset-2 ${
-                  i === current ? "bg-[#2E4A3B]" : "bg-white/80 ring-1 ring-black/10"
+                  i === current
+                    ? "bg-[#2E4A3B]"
+                    : "bg-white/80 ring-1 ring-black/10"
                 }`}
                 aria-label={`Ir para imagem ${i + 1}`}
                 aria-pressed={i === current}
