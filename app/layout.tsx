@@ -3,8 +3,6 @@ import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
-// Se preferir usar o componente separado que você criou, pode importar:
-// import { JsonLd } from "@/components/JsonLd";
 
 const SITE_URL = "https://www.coroaflores24hrs.com.br";
 
@@ -24,10 +22,7 @@ function BaseJsonLd() {
         areaServed: "BR",
       },
     ],
-    sameAs: [
-      // "https://www.instagram.com/SEU_PERFIL",
-      // "https://www.facebook.com/SEU_PERFIL",
-    ],
+    sameAs: [],
   };
 
   const website = {
@@ -92,14 +87,6 @@ export const metadata: Metadata = {
     "max-snippet": -1,
     "max-image-preview": "large",
     "max-video-preview": -1,
-    // Se quiser ser explícito com Googlebot:
-    // googleBot: {
-    //   index: true,
-    //   follow: true,
-    //   "max-snippet": -1,
-    //   "max-image-preview": "large",
-    //   "max-video-preview": -1,
-    // },
   },
   icons: {
     icon: [{ url: "/favicon.ico" }],
@@ -116,14 +103,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR">
       <head>
-        {/* Google Analytics 4 */}
-        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-WZPC41JTHE" />
-        <Script id="ga4-script" strategy="afterInteractive">
+        {/* gtag.js carregado UMA vez (GA4) e configurado para GA4 + Google Ads */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-WZPC41JTHE"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
+
+            // Google Analytics 4
             gtag('config', 'G-WZPC41JTHE');
+
+            // Google Ads (conversões)
+            gtag('config', 'AW-11415198292');
           `}
         </Script>
 
